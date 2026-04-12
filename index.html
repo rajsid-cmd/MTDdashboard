@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTM Pipeline Dashboard — All Pods</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0F172A;
+    --bg2: #1E293B;
+    --bg3: #0F172A;
+    --card: #1E293B;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #F1F5F9;
+    --muted: #94A3B8;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.5; }
+
+  /* Layout */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
+  .page-title { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.5rem; }
+  .sec { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin: 1.2rem 0 .6rem; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 12px; }
+  .g6 { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 8px; margin-bottom: 1rem; }
+  .g5 { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; margin-bottom: .8rem; }
+  @media(max-width:900px){ .g2,.g3{ grid-template-columns:1fr; } .g6,.g5{ grid-template-columns:repeat(3,1fr); } }
+  @media(max-width:600px){ .g6,.g5{ grid-template-columns:repeat(2,1fr); } }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .card-title { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+
+  /* KPI */
+  .kpi { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
+  .kpi.highlight { border-color: var(--border2); }
+  .kl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .kv { font-size: 20px; font-weight: 600; }
+  .ks { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+  /* Tables */
+  .tbl-wrap { overflow-x: auto; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
+  .tbl thead tr { background: rgba(255,255,255,.04); }
+  .tbl th { font-size: 9px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .tbl th:first-child { text-align: left; }
+  .tbl td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); color: var(--text); }
+  .tbl td:first-child { text-align: left; font-weight: 500; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tfoot td { font-weight: 600; background: rgba(255,255,255,.04); font-size: 11px; }
+  .tbl tr:hover td { background: rgba(255,255,255,.03); }
+
+  /* Badges & tags */
+  .tag { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .mbadge { display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 8px; background: #1D4ED822; color: #60A5FA; border: 1px solid #1D4ED844; margin-left: 4px; }
+  .tbadge { display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 8px; background: #92400E33; color: #FCD34D; border: 1px solid #92400E44; margin-left: 4px; }
+
+  /* Inputs */
+  .ein { background: rgba(255,255,255,.06); border: 1px solid var(--border2); border-radius: 5px; padding: 3px 6px; font-size: 11px; color: var(--text); width: 60px; text-align: center; font-family: inherit; transition: border-color .15s; }
+  .ein:focus { outline: none; border-color: #3B82F6; background: rgba(59,130,246,.1); }
+  .ein-act { width: 80px; border-color: #16A34A44; }
+  .ein-act:focus { border-color: #22C55E; background: rgba(34,197,94,.08); }
+
+  /* Mgr rows */
+  .mgr-row td { color: var(--muted) !important; font-style: italic; background: rgba(255,255,255,.02) !important; }
+
+  /* Pod title */
+  .pod-title { font-size: 16px; font-weight: 600; padding: 10px 16px; background: var(--bg2); border-radius: var(--radius); border-left: 4px solid; margin: 1.5rem 0 .6rem; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .pod-meta { font-size: 12px; font-weight: 400; color: var(--muted); }
+
+  /* Week accordion */
+  .wk-card { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; overflow: hidden; }
+  .wk-hdr { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; background: var(--bg2); user-select: none; transition: background .15s; }
+  .wk-hdr:hover { background: rgba(255,255,255,.05); }
+  .wk-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+  .wk-info { flex: 1; }
+  .wk-name { font-size: 13px; font-weight: 500; }
+  .wk-sub { font-size: 10px; color: var(--muted); }
+  .wk-stats { display: flex; gap: 16px; }
+  .ws { text-align: right; }
+  .ws-l { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .ws-v { font-size: 13px; font-weight: 600; margin-top: 1px; }
+  .chev { font-size: 11px; color: var(--muted); transition: transform .2s; margin-left: 6px; }
+  .chev.op { transform: rotate(180deg); }
+  .wk-body { display: none; border-top: 1px solid var(--border); }
+  .wk-body.op { display: block; }
+  .note { font-size: 10px; color: var(--muted); padding: 6px 14px; background: rgba(255,255,255,.02); border-top: 1px solid var(--border); }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border2); margin: 2rem 0; }
+
+  /* Chart wrapper */
+  .ch-wrap { position: relative; width: 100%; }
+
+  /* Scrollable RT table on small screens */
+  .rt-scroll { overflow-x: auto; }
+
+  /* Master summary banner */
+  .master-banner { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid var(--border2); border-radius: var(--radius); padding: 20px; margin-bottom: 1.2rem; }
+  .master-banner h2 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="page-title">GTM Pipeline Dashboard</div>
+<div class="page-sub">All Pods · Prabhjeet · Vaibhav · Shikhar · Neeraj (SDR Director) · Rajveer · April 2025 · Edit rooftops — everything cascades live</div>
+
+<!-- ═══ MASTER ═══ -->
+<div class="master-banner">
+  <h2>Master Summary — All Pods Combined</h2>
+  <div class="g6" id="masterKPI"></div>
+</div>
+
+<div class="g2">
+  <div class="card"><div class="card-title">Forecast ARR by pod</div>
+    <div class="ch-wrap" style="height:190px"><canvas id="cMasterBar" role="img" aria-label="Forecast by pod"></canvas></div>
+  </div>
+  <div class="card"><div class="card-title">Pipeline rooftops by RAG — all pods</div>
+    <div class="ch-wrap" style="height:190px"><canvas id="cMasterPie" role="img" aria-label="RAG rooftop split"></canvas></div>
+  </div>
+</div>
+
+<div class="sec">Pod comparison</div>
+<div class="card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+  <div class="tbl-wrap"><table class="tbl" id="podSummaryTable"></table></div>
+</div>
+
+<hr class="divider">
+
+<!-- ═══ POD SECTIONS ═══ -->
+<div id="podSections"></div>
+
+</div>
+
+<script>
+const PRICE=18000;
+const CONV={darkRed:.01,red:.01,amber:.20,green:.50};
+const WK_PCTS={w1:.20,w2:.25,w3:.30,w4:.25};
+const WK_DEFS=[
+  {id:"w1",label:"Week 1",dates:"6–10 Apr", clr:"#22C55E",bg:"#14532D",tc:"#BBF7D0"},
+  {id:"w2",label:"Week 2",dates:"14–17 Apr",clr:"#F59E0B",bg:"#78350F",tc:"#FDE68A"},
+  {id:"w3",label:"Week 3",dates:"22–25 Apr",clr:"#A78BFA",bg:"#4C1D95",tc:"#DDD6FE"},
+  {id:"w4",label:"Week 4",dates:"28 Apr+",  clr:"#60A5FA",bg:"#1E3A5F",tc:"#BFDBFE"},
+];
+const BKTS=[
+  {id:"darkRed",label:"Dark Red",clr:"#FCA5A5",bg:"#7F1D1D44",bc:"#7F1D1D",lclr:"#FCA5A5"},
+  {id:"red",    label:"Red",     clr:"#FCA5A5",bg:"#DC262622",bc:"#DC2626",lclr:"#F87171"},
+  {id:"amber",  label:"Amber",   clr:"#FCD34D",bg:"#D9770622",bc:"#D97706",lclr:"#FCD34D"},
+  {id:"green",  label:"Green",   clr:"#86EFAC",bg:"#16A34A22",bc:"#16A34A",lclr:"#86EFAC"},
+];
+const BKT_COLORS=["#7F1D1D","#EF4444","#F59E0B","#22C55E"];
+const POD_COLORS=["#3B82F6","#8B5CF6","#F97316","#22C55E","#EF4444"];
+
+const PODS=[
+  {id:"p1",label:"Prabhjeet's Pod",heading:"Prabhjeet's Pod",color:POD_COLORS[0],sdrs:[
+    {name:"Dixant",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Vaansh",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Simran",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Rakshit",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Drishti",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Sivani",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Prabhjeet", tgt:90000, isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+  ]},
+  {id:"p2",label:"Vaibhav's Pod",heading:"Vaibhav's Pod",color:POD_COLORS[1],sdrs:[
+    {name:"Shefali",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Utsav",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Abhijeet", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Shadman",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Anurag",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Vaibhav",  tgt:0,     isMgr:true, rt:{darkRed:0,red:0,amber:0,green:0}},
+  ]},
+  {id:"p3",label:"Shikhar's Pod",heading:"Shikhar's Pod",color:POD_COLORS[2],sdrs:[
+    {name:"Shikhar",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Viplove",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Anisha",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Khubaib",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Abhishek", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+  ]},
+  {id:"p4",label:"Neeraj's Pod",heading:"Neeraj's Pod — SDR Director: Neeraj",color:POD_COLORS[3],sdrs:[
+    {name:"Kshitij Agarwal",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Muskan Makkar",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Ketan Srivastava", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Rishabh Sharma",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Shikhar Paroha",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Vikram Choudhary", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Nitish Malik",     tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Sanamdeep",        tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+  ]},
+  {id:"p5",label:"Rajveer's Pod",heading:"Rajveer's Pod",color:POD_COLORS[4],sdrs:[
+    {name:"Rajveer", tgt:90000, isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Namrata", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Naman",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Jayant",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Ashish",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+  ]},
+];
+
+// Persist to localStorage
+function saveState(){
+  try{
+    const data={pods:PODS.map(p=>({id:p.id,sdrs:p.sdrs.map(s=>({name:s.name,rt:{...s.rt}}))})),actuals};
+    localStorage.setItem('gtm_v1',JSON.stringify(data));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem('gtm_v1');
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    data.pods.forEach(pd=>{
+      const pod=PODS.find(p=>p.id===pd.id);
+      if(!pod)return;
+      pd.sdrs.forEach(sd=>{
+        const sdr=pod.sdrs.find(s=>s.name===sd.name);
+        if(sdr)sdr.rt={...sd.rt};
+      });
+    });
+    if(data.actuals){
+      Object.keys(data.actuals).forEach(podId=>{
+        if(!actuals[podId])return;
+        Object.keys(data.actuals[podId]).forEach(wkId=>{
+          if(!actuals[podId][wkId])return;
+          Object.keys(data.actuals[podId][wkId]).forEach(sdrName=>{
+            actuals[podId][wkId][sdrName]=data.actuals[podId][wkId][sdrName]||0;
+          });
+        });
+      });
+    }
+  }catch(e){}
+}
+
+const actuals={};
+PODS.forEach(pod=>{
+  actuals[pod.id]={};
+  WK_DEFS.forEach(w=>{actuals[pod.id][w.id]={};pod.sdrs.forEach(s=>{actuals[pod.id][w.id][s.name]=0;});});
+});
+
+loadState();
+
+const fmt  = v=>"$"+Math.round(v).toLocaleString();
+const fmtK = v=>v>=1e6?"$"+(v/1e6).toFixed(1)+"M":v===0?"$0":"$"+Math.round(v/1000)+"K";
+const pct  = (a,b)=>b?Math.round(a/b*100):0;
+
+const sdrARR   = (s,b)   => s.rt[b]*CONV[b]*PRICE;
+const sdrTotal = s       => BKTS.reduce((t,b)=>t+sdrARR(s,b.id),0);
+const sdrWkF   = (wId,s) => Math.round(sdrTotal(s)*WK_PCTS[wId]);
+const podSDRs  = pod     => pod.sdrs.filter(s=>!s.isMgr);
+const podFore  = pod     => podSDRs(pod).reduce((t,s)=>t+sdrTotal(s),0);
+const podTgt   = pod     => podSDRs(pod).reduce((t,s)=>t+s.tgt,0);
+const podAllRT = (pod,b) => pod.sdrs.reduce((t,s)=>t+s.rt[b],0);
+const podAllARR= (pod,b) => podAllRT(pod,b)*CONV[b]*PRICE;
+const podActs  = pod     => WK_DEFS.reduce((t,w)=>t+podSDRs(pod).reduce((tt,s)=>tt+(actuals[pod.id][w.id][s.name]||0),0),0);
+const wkPodAct = (pod,wId)=> podSDRs(pod).reduce((t,s)=>t+(actuals[pod.id][wId][s.name]||0),0);
+const masterFore=()=> PODS.reduce((t,p)=>t+podFore(p),0);
+const masterTgt =()=> PODS.reduce((t,p)=>t+podTgt(p),0);
+const masterActs=()=> PODS.reduce((t,p)=>t+podActs(p),0);
+const masterRT  =b => PODS.reduce((t,p)=>t+podAllRT(p,b),0);
+
+const gc_=(v)=>v>=0?"#22C55E":"#EF4444";
+const pc_=(p)=>p>=100?"#F0FDF4":p>=60?"#FFFBEB":"#FEF2F2";
+const ptc_=(p)=>p>=100?"#15803D":p>=60?"#92400E":"#991B1B";
+const tagH=(p)=>`<span class="tag" style="background:${pc_(p)};color:${ptc_(p)}">${p}%</span>`;
+
+function renderMasterKPI(){
+  const tf=masterFore(),tt=masterTgt(),gap=tf-tt,ta=masterActs(),arrGap=tt-ta,totalSDRs=PODS.reduce((t,p)=>t+podSDRs(p).length,0);
+  const cards=[
+    {id:"mkv-fore",l:"Total forecast ARR",  v:fmt(tf),     s:pct(tf,tt)+"% to target",     vc:tf>=tt?"#22C55E":"#F59E0B"},
+    {id:"mkv-tgt", l:"Total target",        v:fmt(tt),     s:totalSDRs+" active SDRs"},
+    {id:"mkv-gap", l:"Forecast gap",        v:(gap>=0?"+":"")+fmt(gap),s:gap>=0?"Ahead of target":"Behind target",vc:gc_(gap)},
+    {id:"mkv-act", l:"Total actuals",       v:fmt(ta),     s:pct(ta,tt)+"% collected",     vc:"#60A5FA"},
+    {id:"mkv-agap",l:"ARR still to close",  v:fmt(arrGap), s:arrGap<=0?"All targets hit!":"Remaining",vc:arrGap<=0?"#22C55E":"#EF4444"},
+    {id:"mkv-pods",l:"Active pods",         v:"5",         s:"across all managers"},
+  ];
+  document.getElementById("masterKPI").innerHTML=cards.map(c=>`
+    <div class="kpi highlight"><div class="kl">${c.l}</div>
+    <div class="kv" id="${c.id}" style="color:${c.vc||'var(--text)'}">${c.v}</div>
+    <div class="ks" id="${c.id}-s">${c.s}</div></div>`).join("");
+}
+
+function renderPodSummaryTable(){
+  const rows=PODS.map(pod=>{
+    const tf=Math.round(podFore(pod)),tt=podTgt(pod),g=tf-tt,p=pct(tf,tt),ta=podActs(pod),ag=tt-ta;
+    return `<tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${pod.color};margin-right:6px;vertical-align:middle"></span>${pod.label}</td>
+      <td style="color:var(--muted)">${fmt(tt)}</td>
+      <td style="color:#60A5FA;font-weight:600" id="ps-fore-${pod.id}">${fmt(tf)}</td>
+      <td style="color:${gc_(g)}" id="ps-gap-${pod.id}">${g>=0?"+":""}${fmt(g)}</td>
+      <td style="color:#60A5FA" id="ps-act-${pod.id}">${fmt(ta)}</td>
+      <td style="color:${ag>0?"#EF4444":"#22C55E"}" id="ps-agap-${pod.id}">${ag>0?fmt(ag):"✓ Hit!"}</td>
+      <td id="ps-pct-${pod.id}">${tagH(p)}</td>
+    </tr>`;
+  }).join("");
+  const mf=Math.round(masterFore()),mt=masterTgt(),mg=mf-mt,ma=masterActs(),mag=mt-ma,mp=pct(mf,mt);
+  document.getElementById("podSummaryTable").innerHTML=`
+    <thead><tr><th>Pod</th><th>Target</th><th style="color:#60A5FA">Forecast</th><th>Fore gap</th><th style="color:#60A5FA">Actuals</th><th>ARR gap</th><th>% target</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td>All pods</td><td style="color:var(--muted)">${fmt(mt)}</td>
+      <td style="color:#60A5FA;font-weight:600" id="ps-fore-all">${fmt(mf)}</td>
+      <td style="color:${gc_(mg)}" id="ps-gap-all">${mg>=0?"+":""}${fmt(mg)}</td>
+      <td style="color:#60A5FA" id="ps-act-all">${fmt(ma)}</td>
+      <td style="color:${mag>0?"#EF4444":"#22C55E"}" id="ps-agap-all">${mag>0?fmt(mag):"✓ Hit!"}</td>
+      <td id="ps-pct-all">${tagH(mp)}</td>
+    </tr></tfoot>`;
+}
+
+let cMasterBar,cMasterPie;
+function buildMasterCharts(){
+  const isDark=true;
+  const gridClr='rgba(255,255,255,.06)',tickClr='#64748B';
+  cMasterBar=new Chart(document.getElementById("cMasterBar"),{type:"bar",
+    data:{labels:PODS.map(p=>p.label.replace("'s Pod","")),datasets:[
+      {label:"Forecast",data:PODS.map(p=>Math.round(podFore(p))),backgroundColor:POD_COLORS,borderRadius:5,borderSkipped:false},
+      {label:"Target",  data:PODS.map(p=>podTgt(p)),backgroundColor:"rgba(148,163,184,.12)",borderColor:"rgba(148,163,184,.3)",borderWidth:1,borderRadius:5,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tickClr,font:{size:10},boxWidth:10,padding:10}}},
+      scales:{x:{grid:{display:false},ticks:{color:tickClr,font:{size:10}}},y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10},callback:v=>"$"+Math.round(v/1000)+"K"}}}
+    }
+  });
+  cMasterPie=new Chart(document.getElementById("cMasterPie"),{type:"doughnut",
+    data:{labels:BKTS.map(b=>b.label),datasets:[{data:BKTS.map(b=>Math.max(masterRT(b.id),0)),backgroundColor:BKT_COLORS,borderWidth:2,borderColor:"#0F172A"}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"right",labels:{color:tickClr,font:{size:10},padding:8,boxWidth:10}}}}
+  });
+}
+function updateMasterCharts(){
+  if(cMasterBar){cMasterBar.data.datasets[0].data=PODS.map(p=>Math.round(podFore(p)));cMasterBar.update();}
+  if(cMasterPie){cMasterPie.data.datasets[0].data=BKTS.map(b=>Math.max(masterRT(b.id),0));cMasterPie.update();}
+}
+
+function renderPodSections(){
+  document.getElementById("podSections").innerHTML=PODS.map((pod,pi)=>(pi>0?'<hr class="divider">':'')+renderPodHTML(pod)).join("");
+  // restore input values
+  PODS.forEach(pod=>{
+    pod.sdrs.forEach((s,si)=>{
+      BKTS.forEach(b=>{
+        const el=document.getElementById(`rtin-${pod.id}-${si}-${b.id}`);
+        if(el)el.value=s.rt[b.id]||'';
+      });
+      WK_DEFS.forEach(wk=>{
+        const el=document.getElementById(`actin-${pod.id}-${wk.id}-${s.name}`);
+        if(el)el.value=actuals[pod.id][wk.id][s.name]||'';
+      });
+    });
+  });
+}
+
+function renderPodHTML(pod){
+  const tf=Math.round(podFore(pod)),tt=podTgt(pod),g=tf-tt,p=pct(tf,tt);
+  const sdrRows=pod.sdrs.map((s,si)=>{
+    const f=Math.round(sdrTotal(s)),isMgr=s.isMgr;
+    const gv=isMgr?null:f-s.tgt,pv=isMgr?null:pct(f,s.tgt);
+    return `<tr class="${isMgr?"mgr-row":""}">
+      <td>${s.name}${isMgr?'<span class="mbadge">mgr</span>':''}${s.tgt===90000&&!isMgr?'<span class="tbadge">$90K</span>':''}</td>
+      <td style="color:var(--muted)">${isMgr?"—":fmt(s.tgt)}</td>
+      <td style="color:#FCA5A5">${fmt(sdrARR(s,"darkRed"))}</td>
+      <td style="color:#F87171">${fmt(sdrARR(s,"red"))}</td>
+      <td style="color:#FCD34D">${fmt(sdrARR(s,"amber"))}</td>
+      <td style="color:#86EFAC">${fmt(sdrARR(s,"green"))}</td>
+      <td style="color:${isMgr?"#A78BFA":"#60A5FA"};font-weight:600" id="sf-${pod.id}-${si}">${fmt(f)}</td>
+      <td style="color:${isMgr?"var(--muted)":gc_(gv)}" id="sg-${pod.id}-${si}">${isMgr?"—":(gv>=0?"+":"")+fmt(gv)}</td>
+      <td id="sp-${pod.id}-${si}">${isMgr?'<span class="tag" style="background:#1D4ED822;color:#60A5FA">ref</span>':tagH(pv)}</td>
+    </tr>`;
+  }).join("");
+
+  const rtRows=pod.sdrs.map((s,si)=>{
+    const cells=BKTS.map(b=>`
+      <td style="text-align:center"><input class="ein" id="rtin-${pod.id}-${si}-${b.id}" value="${s.rt[b.id]||''}" placeholder="0" oninput="editRT('${pod.id}',${si},'${b.id}',this.value)" /></td>
+      <td style="font-size:11px" id="rta-${pod.id}-${si}-${b.id}">${fmt(sdrARR(s,b.id))}</td>`).join("");
+    return `<tr class="${s.isMgr?"mgr-row":""}"><td>${s.name}${s.isMgr?'<span class="mbadge">mgr</span>':''}</td>${cells}<td style="color:${s.isMgr?"#A78BFA":"#60A5FA"};font-weight:600" id="rtt-${pod.id}-${si}">${fmt(Math.round(sdrTotal(s)))}</td></tr>`;
+  }).join("");
+
+  const bktHdrs=BKTS.map(b=>`<th colspan="2" style="color:${b.lclr};text-align:center;font-size:9px">${b.label} ${Math.round(CONV[b.id]*100)}%·×$18K</th>`).join("");
+  const rtFootCells=BKTS.map(b=>`
+    <td id="rft-${pod.id}-${b.id}" style="text-align:center;font-weight:600;font-size:10px">${podAllRT(pod,b.id)}</td>
+    <td id="rfta-${pod.id}-${b.id}" style="font-weight:600;font-size:10px">${fmt(podAllARR(pod,b.id))}</td>`).join("");
+
+  const wkHTML=WK_DEFS.map((wk,wi)=>{
+    const totTgt=podSDRs(pod).reduce((t,s)=>t+s.tgt/4,0);
+    const totFore=podSDRs(pod).reduce((t,s)=>t+sdrWkF(wk.id,s),0);
+    const totAct=wkPodAct(pod,wk.id),arrGap=totTgt-totAct,p2=pct(totAct,totTgt);
+    const fc=p2>=100?"#22C55E":p2>=60?"#F59E0B":"#EF4444";
+    const wkRows=pod.sdrs.map(s=>{
+      const isMgr=s.isMgr,wt=isMgr?null:s.tgt/4,fore=sdrWkF(wk.id,s),act=actuals[pod.id][wk.id][s.name]||0;
+      const sp2=isMgr?null:pct(act,wt);
+      const sc=sp2>=100?"#22C55E":sp2>=60?"#F59E0B":"#EF4444",sbg=sp2>=100?"#14532D33":sp2>=60?"#78350F33":"#7F1D1D33";
+      return `<tr class="${isMgr?"mgr-row":""}">
+        <td>${s.name}${isMgr?'<span class="mbadge">mgr</span>':''}</td>
+        <td style="color:var(--muted)">${isMgr?"—":fmt(wt)}</td>
+        <td style="color:#A78BFA" id="wf-${pod.id}-${wk.id}-${s.name}">${fmt(fore)}</td>
+        <td><input class="ein ein-act" id="actin-${pod.id}-${wk.id}-${s.name}" value="${act||''}" placeholder="0" oninput="updateActual('${pod.id}','${wk.id}','${s.name}','${isMgr}',this.value)" /></td>
+        <td style="color:${isMgr?"var(--muted)":"#EF4444"}" id="wg-${pod.id}-${wk.id}-${s.name}">${isMgr?"—":fmt(Math.max(0,wt-act))}</td>
+        <td id="wp-${pod.id}-${wk.id}-${s.name}">${isMgr?'<span class="tag" style="background:#1D4ED822;color:#60A5FA">ref</span>':`<span class="tag" style="background:${sbg};color:${sc}">${sp2}%</span>`}</td>
+      </tr>`;
+    }).join("");
+    return `<div class="wk-card">
+      <div class="wk-hdr" onclick="toggleWk('${pod.id}-${wk.id}')">
+        <div class="wk-dot" style="background:${wk.bg};color:${wk.tc}">${wi+1}</div>
+        <div class="wk-info">
+          <div class="wk-name">${wk.label} <span style="color:var(--muted);font-weight:400;font-size:10px">${wk.dates}</span></div>
+          <div class="wk-sub">Team target ${fmt(totTgt)}</div>
+        </div>
+        <div class="wk-stats">
+          <div class="ws"><div class="ws-l">Forecast</div><div class="ws-v" style="color:${wk.clr}" id="wh-fore-${pod.id}-${wk.id}">${fmtK(totFore)}</div></div>
+          <div class="ws"><div class="ws-l">Actuals</div><div class="ws-v" style="color:#60A5FA" id="wh-act-${pod.id}-${wk.id}">${fmtK(totAct)}</div></div>
+          <div class="ws"><div class="ws-l">ARR gap</div><div class="ws-v" style="color:${arrGap>0?"#EF4444":"#22C55E"}" id="wh-gap-${pod.id}-${wk.id}">${arrGap>0?fmt(arrGap):"✓ Hit!"}</div></div>
+          <div class="ws"><div class="ws-l">% done</div><div class="ws-v" style="color:${fc}" id="wh-pct-${pod.id}-${wk.id}">${p2}%</div></div>
+        </div>
+        <span class="chev" id="chev-${pod.id}-${wk.id}">▼</span>
+      </div>
+      <div class="wk-body" id="body-${pod.id}-${wk.id}">
+        <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>SDR</th><th>Wk target</th><th style="color:#A78BFA">Forecast</th><th style="color:#86EFAC">Actual</th><th style="color:#FCA5A5">Gap</th><th>%</th></tr></thead>
+          <tbody>${wkRows}</tbody>
+          <tfoot><tr>
+            <td>Total</td><td style="color:var(--muted)">${fmt(totTgt)}</td>
+            <td style="color:#A78BFA" id="wt-fore-${pod.id}-${wk.id}">${fmt(totFore)}</td>
+            <td style="color:#86EFAC;font-weight:600" id="wt-act-${pod.id}-${wk.id}">${fmt(totAct)}</td>
+            <td style="color:${arrGap>0?"#EF4444":"#22C55E"}" id="wt-gap-${pod.id}-${wk.id}">${arrGap>0?fmt(arrGap):"✓ Hit!"}</td>
+            <td id="wt-pct-${pod.id}-${wk.id}"><span class="tag" style="background:${p2>=100?"#14532D33":"#78350F33"};color:${p2>=100?"#22C55E":"#F59E0B"}">${p2}%</span></td>
+          </tr></tfoot>
+        </table></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `
+  <div class="pod-title" style="border-left-color:${pod.color}">
+    ${pod.heading}
+    <span class="pod-meta">Forecast: <span id="ptf-${pod.id}" style="color:${pod.color}">${fmt(tf)}</span> · Target: ${fmt(tt)} · Gap: <span id="ptg-${pod.id}" style="color:${gc_(g)}">${g>=0?"+":""}${fmt(g)}</span> · <span id="ptp-${pod.id}" style="color:${p>=100?"#22C55E":"#F59E0B"}">${p}% to target</span></span>
+  </div>
+
+  <div class="sec">SDR forecast summary</div>
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>SDR</th><th>Target</th><th style="color:#FCA5A5">Dark Red</th><th style="color:#F87171">Red</th><th style="color:#FCD34D">Amber</th><th style="color:#86EFAC">Green</th><th style="color:#60A5FA">Forecast</th><th>Gap</th><th>% Target</th></tr></thead>
+      <tbody id="sb-${pod.id}">${sdrRows}</tbody>
+      <tfoot><tr>
+        <td>Total</td><td style="color:var(--muted)">${fmt(tt)}</td>
+        <td id="fa-${pod.id}-darkRed" style="color:#FCA5A5">${fmt(podAllARR(pod,"darkRed"))}</td>
+        <td id="fa-${pod.id}-red" style="color:#F87171">${fmt(podAllARR(pod,"red"))}</td>
+        <td id="fa-${pod.id}-amber" style="color:#FCD34D">${fmt(podAllARR(pod,"amber"))}</td>
+        <td id="fa-${pod.id}-green" style="color:#86EFAC">${fmt(podAllARR(pod,"green"))}</td>
+        <td style="color:#60A5FA;font-weight:600" id="ft-${pod.id}">${fmt(tf)}</td>
+        <td style="color:${gc_(g)}" id="fg-${pod.id}">${g>=0?"+":""}${fmt(g)}</td>
+        <td id="fp-${pod.id}">${tagH(p)}</td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+
+  <div class="sec">Edit rooftops — all projections update from here</div>
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
+    <div class="rt-scroll"><table class="tbl">
+      <thead>
+        <tr><th rowspan="2">SDR</th>${bktHdrs}<th rowspan="2" style="color:#60A5FA">Total ARR</th></tr>
+        <tr>${BKTS.map(()=>'<th style="font-size:8px;color:var(--muted)">RT</th><th style="font-size:8px;color:var(--muted)">Proj ARR</th>').join("")}</tr>
+      </thead>
+      <tbody>${rtRows}</tbody>
+      <tfoot><tr><td>Total</td>${rtFootCells}<td style="color:#60A5FA;font-weight:600" id="rft-${pod.id}-total">${fmt(Math.round(pod.sdrs.reduce((t,s)=>t+sdrTotal(s),0)))}</td></tr></tfoot>
+    </table></div>
+  </div>
+
+  <div class="sec">Week-on-week tracker</div>
+  ${wkHTML}`;
+}
+
+function editRT(podId,si,bkt,val){
+  const pod=PODS.find(p=>p.id===podId);
+  pod.sdrs[si].rt[bkt]=parseInt(val)||0;
+  const s=pod.sdrs[si];
+  const ae=document.getElementById(`rta-${podId}-${si}-${bkt}`);if(ae)ae.textContent=fmt(sdrARR(s,bkt));
+  const te=document.getElementById(`rtt-${podId}-${si}`);if(te)te.textContent=fmt(Math.round(sdrTotal(s)));
+  const rre=document.getElementById(`rft-${podId}-${bkt}`);if(rre)rre.textContent=podAllRT(pod,bkt);
+  const rae=document.getElementById(`rfta-${podId}-${bkt}`);if(rae)rae.textContent=fmt(podAllARR(pod,bkt));
+  const rte=document.getElementById(`rft-${podId}-total`);if(rte)rte.textContent=fmt(Math.round(pod.sdrs.reduce((t,s2)=>t+sdrTotal(s2),0)));
+  const f=Math.round(sdrTotal(s)),isMgr=s.isMgr,gv=isMgr?null:f-s.tgt,pv=isMgr?null:pct(f,s.tgt);
+  const rows2=document.querySelectorAll(`#sb-${podId} tr`);
+  if(rows2[si]){const cells=rows2[si].querySelectorAll("td");const bi={darkRed:2,red:3,amber:4,green:5};BKTS.forEach(b=>{if(cells[bi[b.id]])cells[bi[b.id]].textContent=fmt(sdrARR(s,b.id));});}
+  const sfe=document.getElementById(`sf-${podId}-${si}`);if(sfe)sfe.textContent=fmt(f);
+  const sge=document.getElementById(`sg-${podId}-${si}`);if(sge&&!isMgr){sge.textContent=(gv>=0?"+":"")+fmt(gv);sge.style.color=gc_(gv);}
+  const spe=document.getElementById(`sp-${podId}-${si}`);if(spe&&!isMgr)spe.innerHTML=tagH(pv);
+  const tf2=Math.round(podFore(pod)),tt2=podTgt(pod),tg2=tf2-tt2,tp2=pct(tf2,tt2);
+  BKTS.forEach(b=>{const e=document.getElementById(`fa-${podId}-${b.id}`);if(e)e.textContent=fmt(podAllARR(pod,b.id));});
+  const fte=document.getElementById(`ft-${podId}`);if(fte)fte.textContent=fmt(tf2);
+  const fge=document.getElementById(`fg-${podId}`);if(fge){fge.textContent=(tg2>=0?"+":"")+fmt(tg2);fge.style.color=gc_(tg2);}
+  const fpe=document.getElementById(`fp-${podId}`);if(fpe)fpe.innerHTML=tagH(tp2);
+  const ptf=document.getElementById(`ptf-${podId}`);if(ptf)ptf.textContent=fmt(tf2);
+  const ptg=document.getElementById(`ptg-${podId}`);if(ptg){ptg.textContent=(tg2>=0?"+":"")+fmt(tg2);ptg.style.color=gc_(tg2);}
+  const ptp=document.getElementById(`ptp-${podId}`);if(ptp){ptp.textContent=tp2+"% to target";ptp.style.color=tp2>=100?"#22C55E":"#F59E0B";}
+  WK_DEFS.forEach(wk=>{
+    const totFore=podSDRs(pod).reduce((t,s2)=>t+sdrWkF(wk.id,s2),0);
+    const hf=document.getElementById(`wh-fore-${podId}-${wk.id}`);if(hf)hf.textContent=fmtK(totFore);
+    const tf3=document.getElementById(`wt-fore-${podId}-${wk.id}`);if(tf3)tf3.textContent=fmt(totFore);
+    pod.sdrs.forEach(s2=>{const fe=document.getElementById(`wf-${podId}-${wk.id}-${s2.name}`);if(fe)fe.textContent=fmt(sdrWkF(wk.id,s2));});
+  });
+  saveState();
+  refreshMaster();
+}
+
+function updateActual(podId,wkId,sdrName,isMgrStr,val){
+  actuals[podId][wkId][sdrName]=parseFloat(val.replace(/[$,]/g,""))||0;
+  const isMgr=isMgrStr==="true",pod=PODS.find(p=>p.id===podId);
+  if(!isMgr){
+    const totTgt=podSDRs(pod).reduce((t,s)=>t+s.tgt/4,0),totAct=wkPodAct(pod,wkId),arrGap=totTgt-totAct,p2=pct(totAct,totTgt);
+    const fc=p2>=100?"#22C55E":p2>=60?"#F59E0B":"#EF4444";
+    const ha=document.getElementById(`wh-act-${podId}-${wkId}`);if(ha)ha.textContent=fmtK(totAct);
+    const hg=document.getElementById(`wh-gap-${podId}-${wkId}`);if(hg){hg.textContent=arrGap>0?fmt(arrGap):"✓ Hit!";hg.style.color=arrGap>0?"#EF4444":"#22C55E";}
+    const hp=document.getElementById(`wh-pct-${podId}-${wkId}`);if(hp){hp.textContent=p2+"%";hp.style.color=fc;}
+    const ta2=document.getElementById(`wt-act-${podId}-${wkId}`);if(ta2)ta2.textContent=fmt(totAct);
+    const tg2=document.getElementById(`wt-gap-${podId}-${wkId}`);if(tg2){tg2.textContent=arrGap>0?fmt(arrGap):"✓ Hit!";tg2.style.color=arrGap>0?"#EF4444":"#22C55E";}
+    const tp2=document.getElementById(`wt-pct-${podId}-${wkId}`);if(tp2)tp2.innerHTML=`<span class="tag" style="background:${p2>=100?"#14532D33":"#78350F33"};color:${p2>=100?"#22C55E":"#F59E0B"}">${p2}%</span>`;
+    const sdr=pod.sdrs.find(s=>s.name===sdrName);
+    if(sdr){const act=actuals[podId][wkId][sdrName],wt=sdr.tgt/4,sp2=pct(act,wt);const sc=sp2>=100?"#22C55E":sp2>=60?"#F59E0B":"#EF4444",sbg=sp2>=100?"#14532D33":sp2>=60?"#78350F33":"#7F1D1D33";const gapEl=document.getElementById(`wg-${podId}-${wkId}-${sdrName}`);if(gapEl)gapEl.textContent=fmt(Math.max(0,wt-act));const spEl=document.getElementById(`wp-${podId}-${wkId}-${sdrName}`);if(spEl)spEl.innerHTML=`<span class="tag" style="background:${sbg};color:${sc}">${sp2}%</span>`;}
+    const ta3=podActs(pod),ag=podTgt(pod)-ta3;
+    const psact=document.getElementById(`ps-act-${podId}`);if(psact)psact.textContent=fmt(ta3);
+    const psagap=document.getElementById(`ps-agap-${podId}`);if(psagap){psagap.textContent=ag>0?fmt(ag):"✓ Hit!";psagap.style.color=ag>0?"#EF4444":"#22C55E";}
+  }
+  saveState();
+  refreshMaster();
+}
+
+function refreshMaster(){
+  const mf=masterFore(),mt=masterTgt(),mg=mf-mt,ma=masterActs(),mag=mt-ma,mp=pct(mf,mt);
+  const upd=(id,v,clr)=>{const e=document.getElementById(id);if(e){e.textContent=v;if(clr)e.style.color=clr;}};
+  upd("mkv-fore",fmt(mf),mf>=mt?"#22C55E":"#F59E0B");
+  upd("mkv-fore-s",pct(mf,mt)+"% to target");
+  upd("mkv-gap",(mg>=0?"+":"")+fmt(mg),gc_(mg));
+  upd("mkv-gap-s",mg>=0?"Ahead of target":"Behind target");
+  upd("mkv-act",fmt(ma),"#60A5FA");
+  upd("mkv-act-s",pct(ma,mt)+"% collected");
+  upd("mkv-agap",fmt(mag),mag<=0?"#22C55E":"#EF4444");
+  upd("mkv-agap-s",mag<=0?"All targets hit!":"Remaining");
+  const psfa=document.getElementById("ps-fore-all");if(psfa)psfa.textContent=fmt(mf);
+  const psga=document.getElementById("ps-gap-all");if(psga){psga.textContent=(mg>=0?"+":"")+fmt(mg);psga.style.color=gc_(mg);}
+  const psaa=document.getElementById("ps-act-all");if(psaa)psaa.textContent=fmt(ma);
+  const psaga=document.getElementById("ps-agap-all");if(psaga){psaga.textContent=mag>0?fmt(mag):"✓ Hit!";psaga.style.color=mag>0?"#EF4444":"#22C55E";}
+  const pspa=document.getElementById("ps-pct-all");if(pspa)pspa.innerHTML=tagH(mp);
+  PODS.forEach(pod=>{
+    const tf2=Math.round(podFore(pod)),tt2=podTgt(pod),g2=tf2-tt2,p2=pct(tf2,tt2),ta2=podActs(pod),ag2=tt2-ta2;
+    const psf=document.getElementById(`ps-fore-${pod.id}`);if(psf)psf.textContent=fmt(tf2);
+    const psg=document.getElementById(`ps-gap-${pod.id}`);if(psg){psg.textContent=(g2>=0?"+":"")+fmt(g2);psg.style.color=gc_(g2);}
+    const psp=document.getElementById(`ps-pct-${pod.id}`);if(psp)psp.innerHTML=tagH(p2);
+  });
+  updateMasterCharts();
+}
+
+function toggleWk(id){
+  document.getElementById("body-"+id).classList.toggle("op");
+  document.getElementById("chev-"+id).classList.toggle("op");
+}
+
+renderMasterKPI();
+renderPodSummaryTable();
+buildMasterCharts();
+renderPodSections();
+</script>
+</body>
+</html>
