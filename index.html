@@ -2,572 +2,799 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GTM Pipeline Dashboard — All Pods</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GTM Pipeline Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root{--bg:#0F172A;--bg2:#1E293B;--card:#1E293B;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#F1F5F9;--muted:#94A3B8;--radius:10px;--radius-sm:6px}
+:root{--bg:#0F172A;--bg2:#1E293B;--card:#1E293B;--bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.15);--txt:#F1F5F9;--mut:#94A3B8;--r:10px;--rs:6px}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5}
-.container{max-width:1440px;margin:0 auto;padding:24px 20px}
-.page-title{font-size:24px;font-weight:600;margin-bottom:4px}
-.page-sub{font-size:13px;color:var(--muted);margin-bottom:1.5rem}
-.sec{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:1.2rem 0 .6rem;border-bottom:1px solid var(--border);padding-bottom:5px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.g6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:1rem}
-@media(max-width:900px){.g2{grid-template-columns:1fr}.g6{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:600px){.g6{grid-template-columns:repeat(2,1fr)}}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
-.card-title{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
-.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px}
-.kpi.highlight{border-color:var(--border2)}
-.kl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
-.kv{font-size:20px;font-weight:600}
-.ks{font-size:10px;color:var(--muted);margin-top:3px}
-.tbl-wrap{overflow-x:auto}
-.tbl{width:100%;border-collapse:collapse;font-size:11px;min-width:700px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);font-size:13px;line-height:1.5}
+.wrap{max-width:1600px;margin:0 auto;padding:20px}
+.ptitle{font-size:22px;font-weight:600;margin-bottom:3px}
+.psub{font-size:12px;color:var(--mut);margin-bottom:1.2rem}
+.sec{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin:1rem 0 .45rem;border-bottom:1px solid var(--bdr);padding-bottom:4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.g8{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-bottom:.9rem}
+@media(max-width:1100px){.g8{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:1fr}}
+@media(max-width:600px){.g8{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px}
+.ctitle{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.kpi{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 12px}
+.kpi.hi{border-color:var(--bdr2)}
+.kl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.kv{font-size:16px;font-weight:600}
+.ks{font-size:10px;color:var(--mut);margin-top:2px}
+.tw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;min-width:600px}
 .tbl thead tr{background:rgba(255,255,255,.04)}
-.tbl th{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:7px 9px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl th{font-size:9px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}
 .tbl th:first-child{text-align:left}
-.tbl td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--border);color:var(--text)}
+.tbl th.grp{text-align:center;border-left:1px solid var(--bdr2)}
+.tbl td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--bdr);color:var(--txt)}
 .tbl td:first-child{text-align:left;font-weight:500}
+.tbl td.grp-l{border-left:1px solid var(--bdr2)}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tfoot td{font-weight:600;background:rgba(255,255,255,.04);font-size:10px}
 .tbl tr:hover td{background:rgba(255,255,255,.03)}
-.tag{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600}
-.tag-sm{display:inline-block;padding:1px 6px;border-radius:20px;font-size:9px;font-weight:600}
-.mbadge{display:inline-block;padding:1px 5px;border-radius:8px;font-size:8px;background:#1D4ED822;color:#60A5FA;border:1px solid #1D4ED844;margin-left:4px}
-.tbadge{display:inline-block;padding:1px 5px;border-radius:8px;font-size:8px;background:#92400E33;color:#FCD34D;border:1px solid #92400E44;margin-left:4px}
-.ein{background:rgba(255,255,255,.06);border:1px solid var(--border2);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text);width:60px;text-align:center;font-family:inherit;transition:border-color .15s}
+.tag{display:inline-block;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600}
+.mb{display:inline-block;padding:1px 5px;border-radius:8px;font-size:8px;background:#1D4ED822;color:#60A5FA;border:1px solid #1D4ED844;margin-left:3px}
+.tb{display:inline-block;padding:1px 5px;border-radius:8px;font-size:8px;background:#92400E33;color:#FCD34D;border:1px solid #92400E44;margin-left:3px}
+.ein{background:rgba(255,255,255,.06);border:1px solid var(--bdr2);border-radius:5px;padding:3px 5px;font-size:10px;color:var(--txt);width:68px;text-align:center;font-family:inherit}
 .ein:focus{outline:none;border-color:#3B82F6;background:rgba(59,130,246,.1)}
-.ein-act{width:78px;border-color:#16A34A44}
-.ein-act:focus{border-color:#22C55E;background:rgba(34,197,94,.08)}
-.mgr-row td{color:var(--muted)!important;font-style:italic;background:rgba(255,255,255,.02)!important}
-.pod-title{font-size:16px;font-weight:600;padding:10px 16px;background:var(--bg2);border-radius:var(--radius);border-left:4px solid;margin:1.5rem 0 .6rem;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.pod-meta{font-size:12px;font-weight:400;color:var(--muted)}
-.wk-card{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;overflow:hidden}
-.wk-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;background:var(--bg2);user-select:none;transition:background .15s}
-.wk-hdr:hover{background:rgba(255,255,255,.05)}
-.wk-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
-.wk-info{flex:1}
-.wk-name{font-size:13px;font-weight:500}
-.wk-sub{font-size:10px;color:var(--muted)}
-.wk-stats{display:flex;gap:16px}
+.ein-fc{border-color:#7C3AED55}
+.ein-fc:focus{border-color:#A78BFA}
+.ein-act{border-color:#16A34A44}
+.ein-act:focus{border-color:#22C55E}
+.mgr td{color:var(--mut)!important;font-style:italic;background:rgba(255,255,255,.02)!important}
+.podtitle{font-size:15px;font-weight:600;padding:9px 14px;background:var(--bg2);border-radius:var(--r);border-left:4px solid;margin:1.4rem 0 .5rem;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.podmeta{font-size:11px;font-weight:400;color:var(--mut)}
+.wkcard{border:1px solid var(--bdr);border-radius:var(--rs);margin-bottom:5px;overflow:hidden}
+.wkhdr{display:flex;align-items:center;gap:9px;padding:9px 12px;cursor:pointer;background:var(--bg2);user-select:none}
+.wkhdr:hover{background:rgba(255,255,255,.04)}
+.wkdot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.wki{flex:1}
+.wkn{font-size:12px;font-weight:500}
+.wks2{font-size:10px;color:var(--mut)}
+.wkst{display:flex;gap:14px}
 .ws{text-align:right}
-.ws-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.ws-v{font-size:13px;font-weight:600;margin-top:1px}
-.chev{font-size:11px;color:var(--muted);transition:transform .2s;margin-left:6px}
+.wsl{font-size:8px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.wsv{font-size:12px;font-weight:600;margin-top:1px}
+.chev{font-size:10px;color:var(--mut);transition:transform .2s;margin-left:5px}
 .chev.op{transform:rotate(180deg)}
-.wk-body{display:none;border-top:1px solid var(--border)}
-.wk-body.op{display:block}
-.note{font-size:9px;color:var(--muted);padding:5px 12px;background:rgba(255,255,255,.02);border-top:1px solid var(--border)}
-.divider{border:none;border-top:1px solid var(--border2);margin:2rem 0}
-.ch-wrap{position:relative;width:100%}
-.rt-scroll{overflow-x:auto}
-.master-banner{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;margin-bottom:1.2rem}
-.master-banner h2{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
-/* two-pct cells */
-.pct-cell{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-.pct-row{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted)}
+.wkbody{display:none;border-top:1px solid var(--bdr)}
+.wkbody.op{display:block}
+.pcts{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.divider{border:none;border-top:1px solid var(--bdr2);margin:1.8rem 0}
+.chwrap{position:relative;width:100%}
+.banner{background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);padding:16px 18px;margin-bottom:1rem}
+.banner h2{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:11px}
 </style>
 </head>
 <body>
-<div class="container">
-<div class="page-title">GTM Pipeline Dashboard</div>
-<div class="page-sub">All Pods · Prabhjeet · Vaibhav · Shikhar · Neeraj (SDR Director) · Rajveer · April 2025 · Edit rooftops — everything cascades live</div>
-
-<div class="master-banner">
-  <h2>Master Summary — All Pods Combined</h2>
-  <div class="g6" id="masterKPI"></div>
-</div>
-
+<div class="wrap">
+<div class="ptitle">GTM Pipeline Dashboard</div>
+<div class="psub">All Pods &middot; Prabhjeet &middot; Vaibhav &middot; Shikhar &middot; Neeraj (SDR Director) &middot; Rajveer &middot; April 2025</div>
+<div class="banner"><h2>Master Summary</h2><div class="g8" id="mKPI"></div></div>
 <div class="g2">
-  <div class="card"><div class="card-title">Forecast ARR by pod</div>
-    <div class="ch-wrap" style="height:190px"><canvas id="cMasterBar" role="img" aria-label="Forecast by pod"></canvas></div>
-  </div>
-  <div class="card"><div class="card-title">Pipeline rooftops by RAG — all pods</div>
-    <div class="ch-wrap" style="height:190px"><canvas id="cMasterPie" role="img" aria-label="RAG rooftop split"></canvas></div>
-  </div>
+  <div class="card"><div class="ctitle">Forecast by pod</div><div class="chwrap" style="height:180px"><canvas id="cBar"></canvas></div></div>
+  <div class="card"><div class="ctitle">Rooftops by RAG</div><div class="chwrap" style="height:180px"><canvas id="cPie"></canvas></div></div>
 </div>
-
 <div class="sec">Pod comparison</div>
-<div class="card" style="padding:0;overflow:hidden;margin-bottom:1rem">
-  <div class="tbl-wrap"><table class="tbl" id="podSummaryTable"></table></div>
-</div>
-
+<div class="card" style="padding:0;overflow:hidden;margin-bottom:1rem"><div class="tw"><table class="tbl" id="podTbl"></table></div></div>
 <hr class="divider">
-<div id="podSections"></div>
+<div id="pods"></div>
 </div>
-
 <script>
-const PRICE=18000;
-const CONV={darkRed:.01,red:.01,amber:.20,green:.50};
-const WK_PCTS={w1:.20,w2:.25,w3:.30,w4:.25};
-const WK_DEFS=[
-  {id:"w1",label:"Week 1",dates:"6–10 Apr", clr:"#22C55E",bg:"#14532D",tc:"#BBF7D0"},
-  {id:"w2",label:"Week 2",dates:"14–17 Apr",clr:"#F59E0B",bg:"#78350F",tc:"#FDE68A"},
-  {id:"w3",label:"Week 3",dates:"22–25 Apr",clr:"#A78BFA",bg:"#4C1D95",tc:"#DDD6FE"},
-  {id:"w4",label:"Week 4",dates:"28 Apr+",  clr:"#60A5FA",bg:"#1E3A5F",tc:"#BFDBFE"},
+var PRICE=18000,CONV={darkRed:.01,red:.01,amber:.20,green:.50};
+var WKP={w1:.20,w2:.25,w3:.30,w4:.25};
+var WKS=[
+  {id:"w1",label:"Week 1",dates:"6-10 Apr", done:true, clr:"#22C55E",bg:"#14532D",tc:"#BBF7D0"},
+  {id:"w2",label:"Week 2",dates:"14-17 Apr",done:false,clr:"#F59E0B",bg:"#78350F",tc:"#FDE68A"},
+  {id:"w3",label:"Week 3",dates:"22-25 Apr",done:false,clr:"#A78BFA",bg:"#4C1D95",tc:"#DDD6FE"},
+  {id:"w4",label:"Week 4",dates:"28 Apr+",  done:false,clr:"#60A5FA",bg:"#1E3A5F",tc:"#BFDBFE"}
 ];
-const BKTS=[
-  {id:"darkRed",label:"Dark Red",clr:"#FCA5A5",lclr:"#FCA5A5"},
-  {id:"red",    label:"Red",     clr:"#F87171",lclr:"#F87171"},
-  {id:"amber",  label:"Amber",   clr:"#FCD34D",lclr:"#FCD34D"},
-  {id:"green",  label:"Green",   clr:"#86EFAC",lclr:"#86EFAC"},
+var BKTS=[
+  {id:"darkRed",label:"Dark Red",tc:"#FCA5A5"},
+  {id:"red",    label:"Red",     tc:"#F87171"},
+  {id:"amber",  label:"Amber",   tc:"#FCD34D"},
+  {id:"green",  label:"Green",   tc:"#86EFAC"}
 ];
-const BKT_COLORS=["#7F1D1D","#EF4444","#F59E0B","#22C55E"];
-const POD_COLORS=["#3B82F6","#8B5CF6","#F97316","#22C55E","#EF4444"];
+var BKC=["#7F1D1D","#EF4444","#F59E0B","#22C55E"];
+var PC=["#3B82F6","#8B5CF6","#F97316","#22C55E","#EF4444"];
 
-const PODS=[
-  {id:"p1",label:"Prabhjeet's Pod",heading:"Prabhjeet's Pod",color:POD_COLORS[0],sdrs:[
-    {name:"Dixant",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Vaansh",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Simran",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Rakshit",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Drishti",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Sivani",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Prabhjeet", tgt:90000, isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+var PODS=[
+  {id:"p1",label:"Prabhjeet's Pod",heading:"Prabhjeet's Pod",color:PC[0],sdrs:[
+    {name:"Dixant",    tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Vaansh",    tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Simran",    tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Rakshit",   tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Drishti",   tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Sivani",    tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Prabhjeet", tgt:90000, mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}}
   ]},
-  {id:"p2",label:"Vaibhav's Pod",heading:"Vaibhav's Pod",color:POD_COLORS[1],sdrs:[
-    {name:"Shefali",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Utsav",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Abhijeet", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Shadman",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Anurag",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Vaibhav",  tgt:0,     isMgr:true, rt:{darkRed:0,red:0,amber:0,green:0}},
+  {id:"p2",label:"Vaibhav's Pod",heading:"Vaibhav's Pod",color:PC[1],sdrs:[
+    {name:"Shefali",  tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Utsav",    tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Abhijeet", tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Shadman",  tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Anurag",   tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Vaibhav",  tgt:0,     mgr:true, rt:{darkRed:0,red:0,amber:0,green:0}}
   ]},
-  {id:"p3",label:"Shikhar's Pod",heading:"Shikhar's Pod",color:POD_COLORS[2],sdrs:[
-    {name:"Shikhar",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Viplove",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Anisha",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Khubaib",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Abhishek", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+  {id:"p3",label:"Shikhar's Pod",heading:"Shikhar's Pod",color:PC[2],sdrs:[
+    {name:"Viplove",  tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Anisha",   tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Khubaib",  tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Abhishek", tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}}
   ]},
-  {id:"p4",label:"Neeraj's Pod",heading:"Neeraj's Pod — SDR Director: Neeraj",color:POD_COLORS[3],sdrs:[
-    {name:"Kshitij Agarwal",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Muskan Makkar",    tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Ketan Srivastava", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Rishabh Sharma",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Shikhar Paroha",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Vikram Choudhary", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Nitish Malik",     tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Sanamdeep",        tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+  {id:"p4",label:"Neeraj's Pod",heading:"Neeraj's Pod (SDR Director: Neeraj)",color:PC[3],sdrs:[
+    {name:"Kshitij Agarwal",  tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Muskan Makkar",    tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Ketan Srivastava", tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Rishabh Sharma",   tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Shikhar Paroha",   tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Vikram Choudhary", tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Nitish Malik",     tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Sanamdeep",        tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}}
   ]},
-  {id:"p5",label:"Rajveer's Pod",heading:"Rajveer's Pod",color:POD_COLORS[4],sdrs:[
-    {name:"Rajveer", tgt:90000, isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Namrata", tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Naman",   tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Jayant",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-    {name:"Ashish",  tgt:210000,isMgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
-  ]},
+  {id:"p5",label:"Rajveer's Pod",heading:"Rajveer's Pod",color:PC[4],sdrs:[
+    {name:"Rajveer", tgt:90000, mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Namrata", tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Naman",   tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Jayant",  tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}},
+    {name:"Ashish",  tgt:210000,mgr:false,rt:{darkRed:0,red:0,amber:0,green:0}}
+  ]}
 ];
 
-// Actuals
-const actuals={};
-PODS.forEach(pod=>{actuals[pod.id]={};WK_DEFS.forEach(w=>{actuals[pod.id][w.id]={};pod.sdrs.forEach(s=>{actuals[pod.id][w.id][s.name]=0;});});});
+// actuals[podId][wkId][sdrName], forecasts[podId][wkId][sdrName]
+var actuals={}, forecasts={};
+PODS.forEach(function(p){
+  actuals[p.id]={}; forecasts[p.id]={};
+  WKS.forEach(function(w){
+    actuals[p.id][w.id]={}; forecasts[p.id][w.id]={};
+    p.sdrs.forEach(function(s){ actuals[p.id][w.id][s.name]=0; forecasts[p.id][w.id][s.name]=0; });
+  });
+});
 
-// Persist
-function saveState(){try{localStorage.setItem('gtm_v2',JSON.stringify({pods:PODS.map(p=>({id:p.id,sdrs:p.sdrs.map(s=>({name:s.name,rt:{...s.rt}}))})),actuals}));}catch(e){}}
-function loadState(){
+function save(){
   try{
-    const raw=localStorage.getItem('gtm_v2');if(!raw)return;
-    const data=JSON.parse(raw);
-    data.pods.forEach(pd=>{const pod=PODS.find(p=>p.id===pd.id);if(!pod)return;pd.sdrs.forEach(sd=>{const sdr=pod.sdrs.find(s=>s.name===sd.name);if(sdr)sdr.rt={...sd.rt};});});
-    if(data.actuals)Object.keys(data.actuals).forEach(podId=>{if(!actuals[podId])return;Object.keys(data.actuals[podId]).forEach(wkId=>{if(!actuals[podId][wkId])return;Object.keys(data.actuals[podId][wkId]).forEach(n=>{actuals[podId][wkId][n]=data.actuals[podId][wkId][n]||0;});});});
+    var d={pods:PODS.map(function(p){return{id:p.id,sdrs:p.sdrs.map(function(s){return{name:s.name,rt:{darkRed:s.rt.darkRed,red:s.rt.red,amber:s.rt.amber,green:s.rt.green}};})};}),actuals:actuals,forecasts:forecasts};
+    localStorage.setItem('gtm_v4',JSON.stringify(d));
   }catch(e){}
 }
-loadState();
-
-const fmt  = v=>"$"+Math.round(v).toLocaleString();
-const fmtK = v=>v>=1e6?"$"+(v/1e6).toFixed(1)+"M":v===0?"$0":"$"+Math.round(v/1000)+"K";
-const pct  = (a,b)=>b?Math.round(a/b*100):0;
-
-const sdrARR    = (s,b)   => s.rt[b]*CONV[b]*PRICE;
-const sdrTotal  = s       => BKTS.reduce((t,b)=>t+sdrARR(s,b.id),0);
-const sdrWkF    = (wId,s) => Math.round(sdrTotal(s)*WK_PCTS[wId]);
-// all actuals for a single SDR across all weeks
-const sdrActuals= (pod,s) => WK_DEFS.reduce((t,w)=>t+(actuals[pod.id][w.id][s.name]||0),0);
-const podSDRs   = pod     => pod.sdrs.filter(s=>!s.isMgr);
-const podFore   = pod     => podSDRs(pod).reduce((t,s)=>t+sdrTotal(s),0);
-const podTgt    = pod     => podSDRs(pod).reduce((t,s)=>t+s.tgt,0);
-const podAllRT  = (pod,b) => pod.sdrs.reduce((t,s)=>t+s.rt[b],0);
-const podAllARR = (pod,b) => podAllRT(pod,b)*CONV[b]*PRICE;
-const podActs   = pod     => WK_DEFS.reduce((t,w)=>t+podSDRs(pod).reduce((tt,s)=>tt+(actuals[pod.id][w.id][s.name]||0),0),0);
-const wkPodAct  = (pod,wId)=> podSDRs(pod).reduce((t,s)=>t+(actuals[pod.id][wId][s.name]||0),0);
-const masterFore=()=> PODS.reduce((t,p)=>t+podFore(p),0);
-const masterTgt =()=> PODS.reduce((t,p)=>t+podTgt(p),0);
-const masterActs=()=> PODS.reduce((t,p)=>t+podActs(p),0);
-const masterRT  = b => PODS.reduce((t,p)=>t+podAllRT(p,b),0);
-
-const gc_ = v=>v>=0?"#22C55E":"#EF4444";
-const pctColor = p=>p>=100?"#22C55E":p>=60?"#F59E0B":"#EF4444";
-const pctBg    = p=>p>=100?"#14532D33":p>=60?"#78350F33":"#7F1D1D33";
-
-function tagH(p,label){
-  if(p===null)return'<span class="tag" style="background:#1D4ED822;color:#60A5FA">ref</span>';
-  const l=label||p+'%';
-  return`<span class="tag" style="background:${pctBg(p)};color:${pctColor(p)}">${l}</span>`;
+function load(){
+  try{
+    var raw=localStorage.getItem('gtm_v4');
+    if(!raw)return;
+    var d=JSON.parse(raw);
+    d.pods.forEach(function(pd){
+      var pod=PODS.filter(function(p){return p.id===pd.id;})[0];
+      if(!pod)return;
+      pd.sdrs.forEach(function(sd){
+        var s=pod.sdrs.filter(function(x){return x.name===sd.name;})[0];
+        if(s){s.rt.darkRed=sd.rt.darkRed||0;s.rt.red=sd.rt.red||0;s.rt.amber=sd.rt.amber||0;s.rt.green=sd.rt.green||0;}
+      });
+    });
+    if(d.actuals){
+      Object.keys(d.actuals).forEach(function(pid){
+        if(!actuals[pid])return;
+        Object.keys(d.actuals[pid]).forEach(function(wid){
+          if(!actuals[pid][wid])return;
+          Object.keys(d.actuals[pid][wid]).forEach(function(n){ actuals[pid][wid][n]=d.actuals[pid][wid][n]||0; });
+        });
+      });
+    }
+    if(d.forecasts){
+      Object.keys(d.forecasts).forEach(function(pid){
+        if(!forecasts[pid])return;
+        Object.keys(d.forecasts[pid]).forEach(function(wid){
+          if(!forecasts[pid][wid])return;
+          Object.keys(d.forecasts[pid][wid]).forEach(function(n){ forecasts[pid][wid][n]=d.forecasts[pid][wid][n]||0; });
+        });
+      });
+    }
+  }catch(e){}
 }
-function tagSm(p,label){
-  const l=label||p+'%';
-  return`<span class="tag-sm" style="background:${pctBg(p)};color:${pctColor(p)}">${l}</span>`;
-}
+load();
 
-// ─── MASTER KPI ───────────────────────────────────────────────────────────
-function renderMasterKPI(){
-  const tf=masterFore(),tt=masterTgt(),gap=tf-tt,ta=masterActs(),arrGap=tt-ta,totalSDRs=PODS.reduce((t,p)=>t+podSDRs(p).length,0);
-  const cards=[
-    {id:"mkv-fore", l:"Total forecast ARR",  v:fmt(tf),     s:pct(tf,tt)+"% of target", vc:tf>=tt?"#22C55E":"#F59E0B"},
-    {id:"mkv-tgt",  l:"Total target",        v:fmt(tt),     s:totalSDRs+" active SDRs"},
-    {id:"mkv-gap",  l:"Forecast gap",        v:(gap>=0?"+":"")+fmt(gap),s:gap>=0?"Ahead":"Behind",vc:gc_(gap)},
-    {id:"mkv-act",  l:"Total actuals closed",v:fmt(ta),     s:pct(ta,tt)+"% of target collected",vc:"#60A5FA"},
-    {id:"mkv-agap", l:"ARR still to close",  v:fmt(arrGap), s:arrGap<=0?"All targets hit!":"Remaining",vc:arrGap<=0?"#22C55E":"#EF4444"},
-    {id:"mkv-pods", l:"Active pods",         v:"5",         s:"across all managers"},
+function fmt(v){return '$'+Math.round(v).toLocaleString();}
+function fmtK(v){return v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v===0?'$0':'$'+Math.round(v/1000)+'K';}
+function pct(a,b){return b?Math.round(a/b*100):0;}
+function gc(v){return v>=0?'#22C55E':'#EF4444';}
+function pcol(p){return p>=100?'#22C55E':p>=60?'#F59E0B':'#EF4444';}
+function pbg(p){return p>=100?'#14532D33':p>=60?'#78350F33':'#7F1D1D33';}
+function tag(p,lbl){return '<span class="tag" style="background:'+pbg(p)+';color:'+pcol(p)+'">'+(lbl||p+'%')+'</span>';}
+function tagxs(p,lbl){return '<span class="tag" style="font-size:9px;padding:1px 5px;background:'+pbg(p)+';color:'+pcol(p)+'">'+(lbl||p+'%')+'</span>';}
+function refTag(){return '<span class="tag" style="background:#1D4ED822;color:#60A5FA">ref</span>';}
+
+// Core calcs
+function sdrARR(s,b){return s.rt[b]*CONV[b]*PRICE;}
+function sdrProj(s){return BKTS.reduce(function(t,b){return t+sdrARR(s,b.id);},0);}
+function sdrWkProj(wid,s){return Math.round(sdrProj(s)*WKP[wid]);}
+function sdrActsAll(pid,s){return WKS.reduce(function(t,w){return t+(actuals[pid][w.id][s.name]||0);},0);}
+function sdrFcstAll(pid,s){return WKS.filter(function(w){return !w.done;}).reduce(function(t,w){return t+(forecasts[pid][w.id][s.name]||0);},0);}
+function sdrFcstWk(pid,wid,s){return forecasts[pid][wid][s.name]||0;}
+
+function podSDRs(p){return p.sdrs.filter(function(s){return !s.mgr;});}
+function podProj(p){return podSDRs(p).reduce(function(t,s){return t+sdrProj(s);},0);}
+function podTgt(p){return podSDRs(p).reduce(function(t,s){return t+s.tgt;},0);}
+function podARR(p,b){return p.sdrs.reduce(function(t,s){return t+s.rt[b];},0)*CONV[b]*PRICE;}
+function podRT(p,b){return p.sdrs.reduce(function(t,s){return t+s.rt[b];},0);}
+function podActs(p){return WKS.reduce(function(t,w){return t+podSDRs(p).reduce(function(tt,s){return tt+(actuals[p.id][w.id][s.name]||0);},0);},0);}
+function podFcst(p){return WKS.filter(function(w){return !w.done;}).reduce(function(t,w){return t+podSDRs(p).reduce(function(tt,s){return tt+(forecasts[p.id][w.id][s.name]||0);},0);},0);}
+function wkPodAct(p,wid){return podSDRs(p).reduce(function(t,s){return t+(actuals[p.id][wid][s.name]||0);},0);}
+function wkPodFcst(p,wid){return podSDRs(p).reduce(function(t,s){return t+(forecasts[p.id][wid][s.name]||0);},0);}
+
+function mastProj(){return PODS.reduce(function(t,p){return t+podProj(p);},0);}
+function mastTgt(){return PODS.reduce(function(t,p){return t+podTgt(p);},0);}
+function mastActs(){return PODS.reduce(function(t,p){return t+podActs(p);},0);}
+function mastFcst(){return PODS.reduce(function(t,p){return t+podFcst(p);},0);}
+function mastRT(b){return PODS.reduce(function(t,p){return t+podRT(p,b);},0);}
+
+// Master KPI
+function renderMKPI(){
+  var mp=mastProj(),mt=mastTgt(),gap=mp-mt,ma=mastActs(),arrGap=mt-ma,mf=mastFcst(),fgap=mf-mt;
+  var nS=PODS.reduce(function(t,p){return t+podSDRs(p).length;},0);
+  var cards=[
+    {id:'mk-tgt', l:'Total target',        v:fmt(mt),  s:nS+' active SDRs'},
+    {id:'mk-prj', l:'Total projected ARR', v:fmt(mp),  s:pct(mp,mt)+'% of target', vc:mp>=mt?'#22C55E':'#F59E0B'},
+    {id:'mk-pgap',l:'Projected gap',       v:(gap>=0?'+':'')+fmt(gap), s:gap>=0?'Ahead':'Behind', vc:gc(gap)},
+    {id:'mk-act', l:'Total actuals',       v:fmt(ma),  s:pct(ma,mt)+'% collected', vc:'#60A5FA'},
+    {id:'mk-agap',l:'ARR to close',        v:fmt(arrGap), s:arrGap<=0?'All hit!':'Remaining', vc:arrGap<=0?'#22C55E':'#EF4444'},
+    {id:'mk-fct', l:'Forecasted ARR',      v:fmt(mf),  s:pct(mf,mt)+'% of target', vc:'#A78BFA'},
+    {id:'mk-fgap',l:'Forecast gap',        v:(fgap>=0?'+':'')+fmt(fgap), s:fgap>=0?'Ahead':'Behind', vc:gc(fgap)},
+    {id:'mk-pods',l:'Active pods',         v:'5',      s:'all managers'},
+    {id:'mk-prog',l:'ARR from programmes',  v:fmt(totalProgARR()), s:'across all pods', vc:'#22C55E'}
   ];
-  document.getElementById("masterKPI").innerHTML=cards.map(c=>`
-    <div class="kpi highlight"><div class="kl">${c.l}</div>
-    <div class="kv" id="${c.id}" style="color:${c.vc||'var(--text)'}">${c.v}</div>
-    <div class="ks" id="${c.id}-s">${c.s}</div></div>`).join("");
+  document.getElementById('mKPI').innerHTML=cards.map(function(c){
+    return '<div class="kpi hi"><div class="kl">'+c.l+'</div><div class="kv" id="'+c.id+'" style="color:'+(c.vc||'var(--txt)')+'">'+c.v+'</div><div class="ks" id="'+c.id+'-s">'+c.s+'</div></div>';
+  }).join('');
 }
 
-// ─── POD SUMMARY TABLE ────────────────────────────────────────────────────
-function renderPodSummaryTable(){
-  const rows=PODS.map(pod=>{
-    const tf=Math.round(podFore(pod)),tt=podTgt(pod),g=tf-tt,p=pct(tf,tt),ta=podActs(pod),ag=tt-ta,pa=pct(ta,tt);
-    return`<tr>
-      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${pod.color};margin-right:6px;vertical-align:middle"></span>${pod.label}</td>
-      <td style="color:var(--muted)">${fmt(tt)}</td>
-      <td style="color:#60A5FA;font-weight:600" id="ps-fore-${pod.id}">${fmt(tf)}</td>
-      <td style="color:${gc_(g)}" id="ps-gap-${pod.id}">${g>=0?"+":""}${fmt(g)}</td>
-      <td style="color:#86EFAC" id="ps-act-${pod.id}">${fmt(ta)}</td>
-      <td style="color:${ag>0?"#EF4444":"#22C55E"}" id="ps-agap-${pod.id}">${ag>0?fmt(ag):"✓ Hit!"}</td>
-      <td id="ps-pct-${pod.id}">${tagH(p)}</td>
-      <td id="ps-apct-${pod.id}">${tagH(pa)}</td>
-    </tr>`;
-  }).join("");
-  const mf=Math.round(masterFore()),mt=masterTgt(),mg=mf-mt,ma=masterActs(),mag=mt-ma,mp=pct(mf,mt),map=pct(ma,mt);
-  document.getElementById("podSummaryTable").innerHTML=`
-    <thead><tr><th>Pod</th><th>Target</th><th style="color:#60A5FA">Forecast ARR</th><th>Fore gap</th><th style="color:#86EFAC">Actuals closed</th><th>ARR gap</th><th>% Forecast vs target</th><th>% Actuals vs target</th></tr></thead>
-    <tbody>${rows}</tbody>
-    <tfoot><tr>
-      <td>All pods</td><td style="color:var(--muted)">${fmt(mt)}</td>
-      <td style="color:#60A5FA;font-weight:600" id="ps-fore-all">${fmt(mf)}</td>
-      <td style="color:${gc_(mg)}" id="ps-gap-all">${mg>=0?"+":""}${fmt(mg)}</td>
-      <td style="color:#86EFAC" id="ps-act-all">${fmt(ma)}</td>
-      <td style="color:${mag>0?"#EF4444":"#22C55E"}" id="ps-agap-all">${mag>0?fmt(mag):"✓ Hit!"}</td>
-      <td id="ps-pct-all">${tagH(mp)}</td>
-      <td id="ps-apct-all">${tagH(map)}</td>
-    </tr></tfoot>`;
+// Pod comparison table
+function renderPodTbl(){
+  var rows=PODS.map(function(p){
+    var proj=Math.round(podProj(p)),tgt=podTgt(p),g=proj-tgt,pp=pct(proj,tgt);
+    var act=podActs(p),ag=tgt-act,pa=pct(act,tgt);
+    var fc=podFcst(p),fg=fc-tgt,pf=pct(fc,tgt);
+    return '<tr>'+
+      '<td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+p.color+';margin-right:5px;vertical-align:middle"></span>'+p.label+'</td>'+
+      '<td style="color:var(--mut)">'+fmt(tgt)+'</td>'+
+      '<td style="color:#60A5FA;font-weight:600" id="ps-proj-'+p.id+'">'+fmt(proj)+'</td>'+
+      '<td style="color:'+gc(g)+'" id="ps-pgap-'+p.id+'">'+(g>=0?'+':'')+fmt(g)+'</td>'+
+      '<td style="color:#A78BFA" id="ps-fct-'+p.id+'">'+fmt(fc)+'</td>'+
+      '<td style="color:'+gc(fg)+'" id="ps-fgap-'+p.id+'">'+(fg>=0?'+':'')+fmt(fg)+'</td>'+
+      '<td style="color:#86EFAC" id="ps-act-'+p.id+'">'+fmt(act)+'</td>'+
+      '<td style="color:'+(ag>0?'#EF4444':'#22C55E')+'" id="ps-agap-'+p.id+'">'+(ag>0?fmt(ag):'Hit!')+'</td>'+
+      '<td id="ps-pp-'+p.id+'">'+tag(pp)+'</td>'+
+      '<td id="ps-pf-'+p.id+'">'+tag(pf)+'</td>'+
+      '<td id="ps-pa-'+p.id+'">'+tag(pa)+'</td>'+
+      '</tr>';
+  }).join('');
+  var mp=Math.round(mastProj()),mt=mastTgt(),mg=mp-mt,ma=mastActs(),mag=mt-ma,mf=mastFcst(),mfg=mf-mt;
+  document.getElementById('podTbl').innerHTML=
+    '<thead><tr><th>Pod</th><th>Target</th>'+
+    '<th style="color:#60A5FA" class="grp">Projected ARR</th><th style="color:#60A5FA">Proj gap</th>'+
+    '<th style="color:#86EFAC" class="grp">Actuals</th><th>ARR gap</th>'+
+    '<th style="color:#A78BFA" class="grp">Forecasted ARR</th><th style="color:#A78BFA">Fcst gap</th>'+
+    '<th>% Proj</th><th>% Actual</th><th>% Fcst</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '<tfoot><tr><td>All pods</td><td style="color:var(--mut)">'+fmt(mt)+'</td>'+
+    '<td style="color:#60A5FA;font-weight:600" id="ps-proj-all">'+fmt(mp)+'</td>'+
+    '<td style="color:'+gc(mg)+'" id="ps-pgap-all">'+(mg>=0?'+':'')+fmt(mg)+'</td>'+
+    '<td style="color:#A78BFA" id="ps-fct-all">'+fmt(mf)+'</td>'+
+    '<td style="color:'+gc(mfg)+'" id="ps-fgap-all">'+(mfg>=0?'+':'')+fmt(mfg)+'</td>'+
+    '<td style="color:#86EFAC" id="ps-act-all">'+fmt(ma)+'</td>'+
+    '<td style="color:'+(mag>0?'#EF4444':'#22C55E')+'" id="ps-agap-all">'+(mag>0?fmt(mag):'Hit!')+'</td>'+
+    '<td id="ps-pp-all">'+tag(pct(mp,mt))+'</td>'+
+    '<td id="ps-pf-all">'+tag(pct(mf,mt))+'</td>'+
+    '<td id="ps-pa-all">'+tag(pct(ma,mt))+'</td>'+
+    '</tr></tfoot>';
 }
 
-// ─── MASTER CHARTS ────────────────────────────────────────────────────────
-let cMasterBar,cMasterPie;
-function buildMasterCharts(){
-  const tc='#64748B',gc='rgba(255,255,255,.06)';
-  cMasterBar=new Chart(document.getElementById("cMasterBar"),{type:"bar",
-    data:{labels:PODS.map(p=>p.label.replace("'s Pod","")),datasets:[
-      {label:"Forecast",data:PODS.map(p=>Math.round(podFore(p))),backgroundColor:POD_COLORS,borderRadius:5,borderSkipped:false},
-      {label:"Target",  data:PODS.map(p=>podTgt(p)),backgroundColor:"rgba(148,163,184,.12)",borderColor:"rgba(148,163,184,.3)",borderWidth:1,borderRadius:5,borderSkipped:false},
-      {label:"Actuals", data:PODS.map(p=>podActs(p)),backgroundColor:"rgba(34,197,94,.25)",borderColor:"#22C55E",borderWidth:1,borderRadius:5,borderSkipped:false},
+// Charts
+var cBar=null,cPie=null;
+function buildCharts(){
+  var tc='#64748B',gc2='rgba(255,255,255,.06)';
+  cBar=new Chart(document.getElementById('cBar'),{type:'bar',
+    data:{labels:PODS.map(function(p){return p.label.replace("'s Pod","");}),datasets:[
+      {label:'Target',    data:PODS.map(function(p){return podTgt(p);}), backgroundColor:'rgba(148,163,184,.1)',borderColor:'rgba(148,163,184,.4)',borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'Projected', data:PODS.map(function(p){return Math.round(podProj(p));}), backgroundColor:PC,borderRadius:4,borderSkipped:false},
+      {label:'Forecasted',data:PODS.map(function(p){return podFcst(p);}), backgroundColor:'rgba(167,139,250,.3)',borderColor:'#A78BFA',borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'Actuals',   data:PODS.map(function(p){return podActs(p);}), backgroundColor:'rgba(34,197,94,.25)',borderColor:'#22C55E',borderWidth:1,borderRadius:4,borderSkipped:false}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc,font:{size:10},boxWidth:10,padding:10}}},
-      scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>"$"+Math.round(v/1000)+"K"}}}
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:tc,font:{size:9},boxWidth:9,padding:8}}},
+      scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:9}}},y:{grid:{color:gc2},ticks:{color:tc,font:{size:9},callback:function(v){return '$'+Math.round(v/1000)+'K';}}}}
     }
   });
-  cMasterPie=new Chart(document.getElementById("cMasterPie"),{type:"doughnut",
-    data:{labels:BKTS.map(b=>b.label),datasets:[{data:BKTS.map(b=>Math.max(masterRT(b.id),0)),backgroundColor:BKT_COLORS,borderWidth:2,borderColor:"#0F172A"}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"right",labels:{color:tc,font:{size:10},padding:8,boxWidth:10}}}}
+  cPie=new Chart(document.getElementById('cPie'),{type:'doughnut',
+    data:{labels:BKTS.map(function(b){return b.label;}),datasets:[{data:BKTS.map(function(b){return Math.max(mastRT(b.id),0);}),backgroundColor:BKC,borderWidth:2,borderColor:'#0F172A'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:tc,font:{size:10},padding:8,boxWidth:10}}}}
   });
 }
-function updateMasterCharts(){
-  if(cMasterBar){
-    cMasterBar.data.datasets[0].data=PODS.map(p=>Math.round(podFore(p)));
-    cMasterBar.data.datasets[2].data=PODS.map(p=>podActs(p));
-    cMasterBar.update();
+function updCharts(){
+  if(cBar){
+    cBar.data.datasets[1].data=PODS.map(function(p){return Math.round(podProj(p));});
+    cBar.data.datasets[2].data=PODS.map(function(p){return podFcst(p);});
+    cBar.data.datasets[3].data=PODS.map(function(p){return podActs(p);});
+    cBar.update();
   }
-  if(cMasterPie){cMasterPie.data.datasets[0].data=BKTS.map(b=>Math.max(masterRT(b.id),0));cMasterPie.update();}
+  if(cPie){cPie.data.datasets[0].data=BKTS.map(function(b){return Math.max(mastRT(b.id),0);});cPie.update();}
 }
 
-// ─── POD SECTIONS ─────────────────────────────────────────────────────────
-function renderPodSections(){
-  document.getElementById("podSections").innerHTML=PODS.map((pod,pi)=>(pi>0?'<hr class="divider">':'')+renderPodHTML(pod)).join("");
-  PODS.forEach(pod=>{
-    pod.sdrs.forEach((s,si)=>{
-      BKTS.forEach(b=>{const el=document.getElementById(`rtin-${pod.id}-${si}-${b.id}`);if(el)el.value=s.rt[b.id]||'';});
-      WK_DEFS.forEach(wk=>{const el=document.getElementById(`actin-${pod.id}-${wk.id}-${s.name}`);if(el)el.value=actuals[pod.id][wk.id][s.name]||'';});
+// Render all pods
+function renderPods(){
+  var html='';
+  PODS.forEach(function(pod,pi){
+    if(pi>0)html+='<hr class="divider">';
+    html+=podHTML(pod);
+  });
+  document.getElementById('pods').innerHTML=html;
+  // restore saved inputs
+  PODS.forEach(function(p){
+    p.sdrs.forEach(function(s,si){
+      BKTS.forEach(function(b){
+        var el=document.getElementById('rt-'+p.id+'-'+si+'-'+b.id);
+        if(el)el.value=s.rt[b.id]||'';
+      });
+      WKS.forEach(function(w){
+        var ae=document.getElementById('act-'+p.id+'-'+w.id+'-'+s.name);
+        if(ae)ae.value=actuals[p.id][w.id][s.name]||'';
+        if(!w.done){
+          var fe=document.getElementById('fc-'+p.id+'-'+w.id+'-'+s.name);
+          if(fe)fe.value=forecasts[p.id][w.id][s.name]||'';
+        }
+      });
     });
   });
 }
 
-function renderPodHTML(pod){
-  const tf=Math.round(podFore(pod)),tt=podTgt(pod),g=tf-tt,p=pct(tf,tt);
+function podHTML(pod){
+  var proj=Math.round(podProj(pod)),tgt=podTgt(pod),g=proj-tgt,pp=pct(proj,tgt);
+  var act=podActs(pod),fc=podFcst(pod);
 
-  // SDR rows — now with actuals + both pct columns
-  const sdrRows=pod.sdrs.map((s,si)=>{
-    const f=Math.round(sdrTotal(s)),isMgr=s.isMgr;
-    const gv=isMgr?null:f-s.tgt;
-    const pFore=isMgr?null:pct(f,s.tgt);            // % forecast vs target
-    const sa=sdrActuals(pod,s);                       // sum of all week actuals
-    const pAct=isMgr?null:pct(sa,s.tgt);             // % actuals vs target
-    return`<tr class="${isMgr?"mgr-row":""}">
-      <td>${s.name}${isMgr?'<span class="mbadge">mgr</span>':''}${s.tgt===90000&&!isMgr?'<span class="tbadge">$90K</span>':''}</td>
-      <td style="color:var(--muted)">${isMgr?"—":fmt(s.tgt)}</td>
-      <td style="color:#FCA5A5">${fmt(sdrARR(s,"darkRed"))}</td>
-      <td style="color:#F87171">${fmt(sdrARR(s,"red"))}</td>
-      <td style="color:#FCD34D">${fmt(sdrARR(s,"amber"))}</td>
-      <td style="color:#86EFAC">${fmt(sdrARR(s,"green"))}</td>
-      <td style="color:${isMgr?"#A78BFA":"#60A5FA"};font-weight:600" id="sf-${pod.id}-${si}">${fmt(f)}</td>
-      <td style="color:#86EFAC" id="sa-${pod.id}-${si}">${isMgr?"—":fmt(sa)}</td>
-      <td style="color:${isMgr?"var(--muted)":gc_(gv)}" id="sg-${pod.id}-${si}">${isMgr?"—":(gv>=0?"+":"")+fmt(gv)}</td>
-      <td id="sp-${pod.id}-${si}">
-        ${isMgr?'<span class="tag" style="background:#1D4ED822;color:#60A5FA">ref</span>':`
-        <div class="pct-cell">
-          ${tagSm(pFore,"⬆ "+pFore+"%")}
-          ${tagSm(pAct,"✓ "+pAct+"%")}
-        </div>`}
-      </td>
-    </tr>`;
-  }).join("");
+  // --- SDR summary table ---
+  // Columns: SDR | Target | DR | R | A | G | Projected ARR | Proj gap | Wk2 Fcst | Wk3 Fcst | Wk4 Fcst | Total Forecasted | Actuals | %Proj | %Fcst
+  var wkFcstThs=WKS.filter(function(w){return !w.done;}).map(function(w){
+    return '<th style="color:#A78BFA" class="grp">'+w.label+' Forecast</th>';
+  }).join('');
 
-  // Footer totals
-  const totalFore=Math.round(podFore(pod)),totalActs=podActs(pod),totalTgt=podTgt(pod);
-  const totalPFore=pct(totalFore,totalTgt),totalPAct=pct(totalActs,totalTgt);
+  var sdrRows=pod.sdrs.map(function(s,si){
+    var f=Math.round(sdrProj(s)),m=s.mgr;
+    var pg2=m?null:f-s.tgt,pp2=m?null:pct(f,s.tgt);
+    var sa=sdrActsAll(pod.id,s),pa=m?null:pct(sa,s.tgt);
+    var sf=sdrFcstAll(pod.id,s),pf=m?null:pct(sf,s.tgt);
+    var wkFcstTds=WKS.filter(function(w){return !w.done;}).map(function(w){
+      var wf=sdrFcstWk(pod.id,w.id,s);
+      return '<td style="color:#A78BFA" class="grp-l" id="sfc-'+pod.id+'-'+w.id+'-'+si+'">'+(m?'--':fmt(wf))+'</td>';
+    }).join('');
+    var pctCell=m?refTag():'<div class="pcts">'+tagxs(pp2,'P:'+pp2+'%')+tagxs(pf,'F:'+pf+'%')+'</div>';
+    return '<tr class="'+(m?'mgr':'')+'">' +
+      '<td>'+s.name+(m?'<span class="mb">mgr</span>':'')+(s.tgt===90000&&!m?'<span class="tb">$90K</span>':'')+'</td>'+
+      '<td style="color:var(--mut)">'+(m?'--':fmt(s.tgt))+'</td>'+
+      '<td style="color:#FCA5A5">'+fmt(sdrARR(s,'darkRed'))+'</td>'+
+      '<td style="color:#F87171">'+fmt(sdrARR(s,'red'))+'</td>'+
+      '<td style="color:#FCD34D">'+fmt(sdrARR(s,'amber'))+'</td>'+
+      '<td style="color:#86EFAC">'+fmt(sdrARR(s,'green'))+'</td>'+
+      '<td style="color:'+(m?'#A78BFA':'#60A5FA')+';font-weight:600" id="sp-'+pod.id+'-'+si+'">'+fmt(f)+'</td>'+
+      '<td style="color:'+(m?'var(--mut)':gc(pg2))+'" id="spg-'+pod.id+'-'+si+'">'+(m?'--':(pg2>=0?'+':'')+fmt(pg2))+'</td>'+
+      wkFcstTds+
+      '<td style="color:#A78BFA;font-weight:600;border-left:1px solid var(--bdr2)" id="sft-'+pod.id+'-'+si+'">'+(m?'--':fmt(sf))+'</td>'+
+      '<td style="color:#86EFAC" id="sat-'+pod.id+'-'+si+'">'+(m?'--':fmt(sa))+'</td>'+
+      '<td id="spcts-'+pod.id+'-'+si+'">'+pctCell+'</td>'+
+      '</tr>';
+  }).join('');
 
-  // RT rows
-  const rtRows=pod.sdrs.map((s,si)=>{
-    const cells=BKTS.map(b=>`
-      <td style="text-align:center"><input class="ein" id="rtin-${pod.id}-${si}-${b.id}" value="${s.rt[b.id]||''}" placeholder="0" oninput="editRT('${pod.id}',${si},'${b.id}',this.value)" /></td>
-      <td style="font-size:11px" id="rta-${pod.id}-${si}-${b.id}">${fmt(sdrARR(s,b.id))}</td>`).join("");
-    return`<tr class="${s.isMgr?"mgr-row":""}"><td>${s.name}${s.isMgr?'<span class="mbadge">mgr</span>':''}</td>${cells}<td style="color:${s.isMgr?"#A78BFA":"#60A5FA"};font-weight:600" id="rtt-${pod.id}-${si}">${fmt(Math.round(sdrTotal(s)))}</td></tr>`;
-  }).join("");
-  const bktHdrs=BKTS.map(b=>`<th colspan="2" style="color:${b.lclr};text-align:center;font-size:9px">${b.label} ${Math.round(CONV[b.id]*100)}%·×$18K</th>`).join("");
-  const rtFootCells=BKTS.map(b=>`
-    <td id="rft-${pod.id}-${b.id}" style="text-align:center;font-weight:600;font-size:10px">${podAllRT(pod,b.id)}</td>
-    <td id="rfta-${pod.id}-${b.id}" style="font-weight:600;font-size:10px">${fmt(podAllARR(pod,b.id))}</td>`).join("");
+  var totalProj=Math.round(podProj(pod)),totalAct=podActs(pod),totalFcst=podFcst(pod),totalTgt=podTgt(pod);
+  var fpg=totalProj-totalTgt,fpp=pct(totalProj,totalTgt),fpa=pct(totalAct,totalTgt),fpf=pct(totalFcst,totalTgt);
+  var footWkFcst=WKS.filter(function(w){return !w.done;}).map(function(w){
+    return '<td style="color:#A78BFA;font-weight:600;border-left:1px solid var(--bdr2)" id="ftfc-'+pod.id+'-'+w.id+'">'+fmt(wkPodFcst(pod,w.id))+'</td>';
+  }).join('');
 
-  // Weekly tracker
-  const wkHTML=WK_DEFS.map((wk,wi)=>{
-    const totTgt=podSDRs(pod).reduce((t,s)=>t+s.tgt/4,0);
-    const totFore=podSDRs(pod).reduce((t,s)=>t+sdrWkF(wk.id,s),0);
-    const totAct=wkPodAct(pod,wk.id),arrGap=totTgt-totAct,p2=pct(totAct,totTgt);
-    const fc=p2>=100?"#22C55E":p2>=60?"#F59E0B":"#EF4444";
-    const wkRows=pod.sdrs.map(s=>{
-      const isMgr=s.isMgr,wt=isMgr?null:s.tgt/4,fore=sdrWkF(wk.id,s),act=actuals[pod.id][wk.id][s.name]||0;
-      const sp2=isMgr?null:pct(act,wt),sc=sp2>=100?"#22C55E":sp2>=60?"#F59E0B":"#EF4444",sbg=pctBg(sp2||0);
-      return`<tr class="${isMgr?"mgr-row":""}">
-        <td>${s.name}${isMgr?'<span class="mbadge">mgr</span>':''}</td>
-        <td style="color:var(--muted)">${isMgr?"—":fmt(wt)}</td>
-        <td style="color:#A78BFA" id="wf-${pod.id}-${wk.id}-${s.name}">${fmt(fore)}</td>
-        <td><input class="ein ein-act" id="actin-${pod.id}-${wk.id}-${s.name}" value="${act||''}" placeholder="0" oninput="updateActual('${pod.id}','${wk.id}','${s.name}','${isMgr}',this.value)" /></td>
-        <td style="color:${isMgr?"var(--muted)":"#EF4444"}" id="wg-${pod.id}-${wk.id}-${s.name}">${isMgr?"—":fmt(Math.max(0,wt-act))}</td>
-        <td id="wp-${pod.id}-${wk.id}-${s.name}">${isMgr?'<span class="tag" style="background:#1D4ED822;color:#60A5FA">ref</span>':`<span class="tag" style="background:${sbg};color:${sc}">${sp2}%</span>`}</td>
-      </tr>`;
-    }).join("");
-    return`<div class="wk-card">
-      <div class="wk-hdr" onclick="toggleWk('${pod.id}-${wk.id}')">
-        <div class="wk-dot" style="background:${wk.bg};color:${wk.tc}">${wi+1}</div>
-        <div class="wk-info">
-          <div class="wk-name">${wk.label} <span style="color:var(--muted);font-weight:400;font-size:10px">${wk.dates}</span></div>
-          <div class="wk-sub">Target ${fmt(totTgt)}</div>
-        </div>
-        <div class="wk-stats">
-          <div class="ws"><div class="ws-l">Forecast</div><div class="ws-v" style="color:${wk.clr}" id="wh-fore-${pod.id}-${wk.id}">${fmtK(totFore)}</div></div>
-          <div class="ws"><div class="ws-l">Actuals</div><div class="ws-v" style="color:#86EFAC" id="wh-act-${pod.id}-${wk.id}">${fmtK(totAct)}</div></div>
-          <div class="ws"><div class="ws-l">ARR gap</div><div class="ws-v" style="color:${arrGap>0?"#EF4444":"#22C55E"}" id="wh-gap-${pod.id}-${wk.id}">${arrGap>0?fmt(arrGap):"✓ Hit!"}</div></div>
-          <div class="ws"><div class="ws-l">% done</div><div class="ws-v" style="color:${fc}" id="wh-pct-${pod.id}-${wk.id}">${p2}%</div></div>
-        </div>
-        <span class="chev" id="chev-${pod.id}-${wk.id}">▼</span>
-      </div>
-      <div class="wk-body" id="body-${pod.id}-${wk.id}">
-        <div class="tbl-wrap"><table class="tbl">
-          <thead><tr><th>SDR</th><th>Wk target</th><th style="color:#A78BFA">Forecast</th><th style="color:#86EFAC">Actual (enter)</th><th style="color:#FCA5A5">Gap</th><th>%</th></tr></thead>
-          <tbody>${wkRows}</tbody>
-          <tfoot><tr>
-            <td>Total</td><td style="color:var(--muted)">${fmt(totTgt)}</td>
-            <td style="color:#A78BFA" id="wt-fore-${pod.id}-${wk.id}">${fmt(totFore)}</td>
-            <td style="color:#86EFAC;font-weight:600" id="wt-act-${pod.id}-${wk.id}">${fmt(totAct)}</td>
-            <td style="color:${arrGap>0?"#EF4444":"#22C55E"}" id="wt-gap-${pod.id}-${wk.id}">${arrGap>0?fmt(arrGap):"✓ Hit!"}</td>
-            <td id="wt-pct-${pod.id}-${wk.id}"><span class="tag" style="background:${pctBg(p2)};color:${pctColor(p2)}">${p2}%</span></td>
-          </tr></tfoot>
-        </table></div>
-      </div>
-    </div>`;
-  }).join("");
+  var sdrSummary='<div class="sec">SDR forecast summary</div>'+
+    '<div class="card" style="padding:0;overflow:hidden;margin-bottom:10px"><div class="tw"><table class="tbl">'+
+    '<thead><tr>'+
+    '<th>SDR</th><th>Target</th>'+
+    '<th style="color:#FCA5A5">Dark Red</th><th style="color:#F87171">Red</th>'+
+    '<th style="color:#FCD34D">Amber</th><th style="color:#86EFAC">Green</th>'+
+    '<th style="color:#60A5FA" class="grp">Projected ARR</th><th style="color:#60A5FA">Proj gap</th>'+
+    wkFcstThs+
+    '<th style="color:#A78BFA" class="grp">Total Forecasted</th>'+
+    '<th style="color:#86EFAC" class="grp">Actuals closed</th>'+
+    '<th>% (P/F)</th>'+
+    '</tr></thead>'+
+    '<tbody id="sb-'+pod.id+'">'+sdrRows+'</tbody>'+
+    '<tfoot><tr>'+
+    '<td>Total</td><td style="color:var(--mut)">'+fmt(totalTgt)+'</td>'+
+    '<td style="color:#FCA5A5" id="fa-'+pod.id+'-darkRed">'+fmt(podARR(pod,'darkRed'))+'</td>'+
+    '<td style="color:#F87171" id="fa-'+pod.id+'-red">'+fmt(podARR(pod,'red'))+'</td>'+
+    '<td style="color:#FCD34D" id="fa-'+pod.id+'-amber">'+fmt(podARR(pod,'amber'))+'</td>'+
+    '<td style="color:#86EFAC" id="fa-'+pod.id+'-green">'+fmt(podARR(pod,'green'))+'</td>'+
+    '<td style="color:#60A5FA;font-weight:600" id="ft-proj-'+pod.id+'">'+fmt(totalProj)+'</td>'+
+    '<td style="color:'+gc(fpg)+'" id="ft-pg-'+pod.id+'">'+(fpg>=0?'+':'')+fmt(fpg)+'</td>'+
+    footWkFcst+
+    '<td style="color:#A78BFA;font-weight:600;border-left:1px solid var(--bdr2)" id="ft-fct-'+pod.id+'">'+fmt(totalFcst)+'</td>'+
+    '<td style="color:#86EFAC;font-weight:600" id="ft-act-'+pod.id+'">'+fmt(totalAct)+'</td>'+
+    '<td id="ft-pcts-'+pod.id+'"><div class="pcts">'+tagxs(fpp,'P:'+fpp+'%')+tagxs(fpf,'F:'+fpf+'%')+'</div></td>'+
+    '</tr></tfoot>'+
+    '</table></div></div>';
 
-  return`
-  <div class="pod-title" style="border-left-color:${pod.color}">
-    ${pod.heading}
-    <span class="pod-meta">
-      Forecast: <span id="ptf-${pod.id}" style="color:${pod.color}">${fmt(tf)}</span> ·
-      Actuals: <span id="pta-${pod.id}" style="color:#86EFAC">${fmt(podActs(pod))}</span> ·
-      Target: ${fmt(tt)} ·
-      Gap: <span id="ptg-${pod.id}" style="color:${gc_(g)}">${g>=0?"+":""}${fmt(g)}</span> ·
-      <span id="ptp-${pod.id}" style="color:${pctColor(p)}">${p}% forecast</span>
-    </span>
-  </div>
+  // --- Edit rooftops table ---
+  var bktHdrs=BKTS.map(function(b){
+    return '<th colspan="2" style="color:'+b.tc+';text-align:center;font-size:9px">'+b.label+' '+Math.round(CONV[b.id]*100)+'% x$18K</th>';
+  }).join('');
+  var rtRows=pod.sdrs.map(function(s,si){
+    var cells=BKTS.map(function(b){
+      return '<td style="text-align:center"><input class="ein" id="rt-'+pod.id+'-'+si+'-'+b.id+'" data-pid="'+pod.id+'" data-si="'+si+'" data-bkt="'+b.id+'" value="'+(s.rt[b.id]||'')+'" placeholder="0" oninput="editRT(this.dataset.pid,+this.dataset.si,this.dataset.bkt,this.value)"></td>'+
+             '<td id="rta-'+pod.id+'-'+si+'-'+b.id+'" style="font-size:10px">'+fmt(sdrARR(s,b.id))+'</td>';
+    }).join('');
+    return '<tr class="'+(s.mgr?'mgr':'')+'"><td>'+s.name+(s.mgr?'<span class="mb">mgr</span>':'')+'</td>'+cells+'<td style="color:'+(s.mgr?'#A78BFA':'#60A5FA')+';font-weight:600" id="rtt-'+pod.id+'-'+si+'">'+fmt(Math.round(sdrProj(s)))+'</td></tr>';
+  }).join('');
+  var rtFootCells=BKTS.map(function(b){
+    return '<td style="text-align:center;font-weight:600;font-size:10px" id="rft-'+pod.id+'-'+b.id+'">'+podRT(pod,b.id)+'</td>'+
+           '<td style="font-weight:600;font-size:10px" id="rfta-'+pod.id+'-'+b.id+'">'+fmt(podARR(pod,b.id))+'</td>';
+  }).join('');
+  var editRtSection='<div class="sec">Edit rooftops</div>'+
+    '<div class="card" style="padding:0;overflow:hidden;margin-bottom:10px"><div class="tw"><table class="tbl">'+
+    '<thead><tr><th rowspan="2">SDR</th>'+bktHdrs+'<th rowspan="2" style="color:#60A5FA">Proj ARR</th></tr>'+
+    '<tr>'+BKTS.map(function(){return '<th style="font-size:8px;color:var(--mut)">RT</th><th style="font-size:8px;color:var(--mut)">ARR</th>';}).join('')+'</tr></thead>'+
+    '<tbody>'+rtRows+'</tbody>'+
+    '<tfoot><tr><td>Total</td>'+rtFootCells+'<td style="color:#60A5FA;font-weight:600" id="rft-'+pod.id+'-total">'+fmt(Math.round(pod.sdrs.reduce(function(t,s){return t+sdrProj(s);},0)))+'</td></tr></tfoot>'+
+    '</table></div></div>';
 
-  <div class="sec">SDR forecast summary — actuals summed from week-on-week tracker</div>
-  <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
-    <div class="tbl-wrap"><table class="tbl">
-      <thead><tr>
-        <th>SDR</th><th>Target</th>
-        <th style="color:#FCA5A5">Dark Red</th><th style="color:#F87171">Red</th>
-        <th style="color:#FCD34D">Amber</th><th style="color:#86EFAC">Green</th>
-        <th style="color:#60A5FA">Forecast ARR</th>
-        <th style="color:#86EFAC">Actuals closed</th>
-        <th>Fore gap</th>
-        <th title="Top: % Forecast vs Target · Bottom: % Actuals vs Target">% Target<br><span style="font-size:8px;opacity:.6">⬆ forecast · ✓ actual</span></th>
-      </tr></thead>
-      <tbody id="sb-${pod.id}">${sdrRows}</tbody>
-      <tfoot><tr>
-        <td>Total</td>
-        <td style="color:var(--muted)">${fmt(totalTgt)}</td>
-        <td style="color:#FCA5A5" id="fa-${pod.id}-darkRed">${fmt(podAllARR(pod,"darkRed"))}</td>
-        <td style="color:#F87171" id="fa-${pod.id}-red">${fmt(podAllARR(pod,"red"))}</td>
-        <td style="color:#FCD34D" id="fa-${pod.id}-amber">${fmt(podAllARR(pod,"amber"))}</td>
-        <td style="color:#86EFAC" id="fa-${pod.id}-green">${fmt(podAllARR(pod,"green"))}</td>
-        <td style="color:#60A5FA;font-weight:600" id="ft-${pod.id}">${fmt(totalFore)}</td>
-        <td style="color:#86EFAC;font-weight:600" id="fta-${pod.id}">${fmt(totalActs)}</td>
-        <td style="color:${gc_(g)}" id="fg-${pod.id}">${g>=0?"+":""}${fmt(g)}</td>
-        <td id="fp-${pod.id}">
-          <div class="pct-cell">
-            ${tagSm(totalPFore,"⬆ "+totalPFore+"%")}
-            ${tagSm(totalPAct,"✓ "+totalPAct+"%")}
-          </div>
-        </td>
-      </tr></tfoot>
-    </table></div>
-  </div>
+  // --- Weekly tracker ---
+  var wkHTML=WKS.map(function(wk,wi){
+    var wTgt=podSDRs(pod).reduce(function(t,s){return t+s.tgt/4;},0);
+    var wProj=podSDRs(pod).reduce(function(t,s){return t+sdrWkProj(wk.id,s);},0);
+    var wAct=wkPodAct(pod,wk.id),wFc=wkPodFcst(pod,wk.id);
+    var wGap=wTgt-wAct,wp=pct(wAct,wTgt);
+    var fcol=wp>=100?'#22C55E':wp>=60?'#F59E0B':'#EF4444';
+    var wkRows=pod.sdrs.map(function(s){
+      var m=s.mgr,wt=m?0:s.tgt/4;
+      var wProj2=sdrWkProj(wk.id,s);
+      var wAct2=actuals[pod.id][wk.id][s.name]||0;
+      var wFc2=forecasts[pod.id][wk.id][s.name]||0;
+      var spa=m?null:pct(wAct2,wt);
+      var fcInput=wk.done
+        ?'<td style="color:var(--mut);font-size:9px">done</td>'
+        :'<td><input class="ein ein-fc" id="fc-'+pod.id+'-'+wk.id+'-'+s.name+'" data-pid="'+pod.id+'" data-wid="'+wk.id+'" data-name="'+s.name+'" data-mgr="'+(m?'true':'false')+'" value="'+(wFc2||'')+'" placeholder="0" oninput="updFc(this.dataset.pid,this.dataset.wid,this.dataset.name,this.dataset.mgr,this.value)"></td>';
+      return '<tr class="'+(m?'mgr':'')+'">'+
+        '<td>'+s.name+(m?'<span class="mb">mgr</span>':'')+'</td>'+
+        '<td style="color:var(--mut)">'+(m?'--':fmt(wt))+'</td>'+
+        '<td style="color:#60A5FA">'+fmt(wProj2)+'</td>'+
+        fcInput+
+        '<td><input class="ein ein-act" id="act-'+pod.id+'-'+wk.id+'-'+s.name+'" data-pid="'+pod.id+'" data-wid="'+wk.id+'" data-name="'+s.name+'" data-mgr="'+(m?'true':'false')+'" value="'+(wAct2||'')+'" placeholder="0" oninput="updAct(this.dataset.pid,this.dataset.wid,this.dataset.name,this.dataset.mgr,this.value)"></td>'+
+        '<td style="color:'+(m?'var(--mut)':'#EF4444')+'" id="wkg-'+pod.id+'-'+wk.id+'-'+s.name+'">'+(m?'--':fmt(Math.max(0,wt-wAct2)))+'</td>'+
+        '<td id="wkp-'+pod.id+'-'+wk.id+'-'+s.name+'">'+(m?refTag():tag(spa))+'</td>'+
+        '</tr>';
+    }).join('');
+    var doneBadge=wk.done?' <span style="font-size:9px;color:#F59E0B;background:#78350F33;padding:1px 5px;border-radius:8px">done</span>':'';
+    return '<div class="wkcard">'+
+      '<div class="wkhdr" data-wkid="'+pod.id+'-'+wk.id+'" onclick="togWk(this.dataset.wkid)">'+
+      '<div class="wkdot" style="background:'+wk.bg+';color:'+wk.tc+'">'+(wi+1)+'</div>'+
+      '<div class="wki"><div class="wkn">'+wk.label+doneBadge+' <span style="color:var(--mut);font-weight:400;font-size:10px">'+wk.dates+'</span></div>'+
+      '<div class="wks2">Target '+fmt(wTgt)+'</div></div>'+
+      '<div class="wkst">'+
+      '<div class="ws"><div class="wsl">Proj</div><div class="wsv" style="color:'+wk.clr+'" id="wh-proj-'+pod.id+'-'+wk.id+'">'+fmtK(wProj)+'</div></div>'+
+      (wk.done?'':'<div class="ws"><div class="wsl">Forecasted</div><div class="wsv" style="color:#A78BFA" id="wh-fc-'+pod.id+'-'+wk.id+'">'+fmtK(wFc)+'</div></div>')+
+      '<div class="ws"><div class="wsl">Actuals</div><div class="wsv" style="color:#86EFAC" id="wh-act-'+pod.id+'-'+wk.id+'">'+fmtK(wAct)+'</div></div>'+
+      '<div class="ws"><div class="wsl">Gap</div><div class="wsv" style="color:'+(wGap>0?'#EF4444':'#22C55E')+'" id="wh-gap-'+pod.id+'-'+wk.id+'">'+(wGap>0?fmt(wGap):'Hit!')+'</div></div>'+
+      '<div class="ws"><div class="wsl">%</div><div class="wsv" style="color:'+fcol+'" id="wh-pct-'+pod.id+'-'+wk.id+'">'+wp+'%</div></div>'+
+      '</div><span class="chev" id="chev-'+pod.id+'-'+wk.id+'">&#9660;</span></div>'+
+      '<div class="wkbody" id="body-'+pod.id+'-'+wk.id+'"><div class="tw"><table class="tbl">'+
+      '<thead><tr><th>SDR</th><th>Wk target</th><th style="color:#60A5FA">Proj</th>'+
+      '<th style="color:#A78BFA">'+(wk.done?'(done)':'Forecast (calendar)')+'</th>'+
+      '<th style="color:#86EFAC">Actual</th><th style="color:#EF4444">Gap</th><th>%</th></tr></thead>'+
+      '<tbody>'+wkRows+'</tbody>'+
+      '<tfoot><tr><td>Total</td><td style="color:var(--mut)">'+fmt(wTgt)+'</td>'+
+      '<td style="color:#60A5FA">'+fmt(wProj)+'</td>'+
+      '<td style="color:#A78BFA" id="wt-fc-'+pod.id+'-'+wk.id+'">'+(wk.done?'--':fmt(wFc))+'</td>'+
+      '<td style="color:#86EFAC;font-weight:600" id="wt-act-'+pod.id+'-'+wk.id+'">'+fmt(wAct)+'</td>'+
+      '<td style="color:'+(wGap>0?'#EF4444':'#22C55E')+'" id="wt-gap-'+pod.id+'-'+wk.id+'">'+(wGap>0?fmt(wGap):'Hit!')+'</td>'+
+      '<td id="wt-pct-'+pod.id+'-'+wk.id+'">'+tag(wp)+'</td>'+
+      '</tr></tfoot></table></div></div></div>';
+  }).join('');
 
-  <div class="sec">Edit rooftops — all projections update from here</div>
-  <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
-    <div class="rt-scroll"><table class="tbl">
-      <thead>
-        <tr><th rowspan="2">SDR</th>${bktHdrs}<th rowspan="2" style="color:#60A5FA">Total ARR</th></tr>
-        <tr>${BKTS.map(()=>'<th style="font-size:8px;color:var(--muted)">RT</th><th style="font-size:8px;color:var(--muted)">Proj ARR</th>').join("")}</tr>
-      </thead>
-      <tbody>${rtRows}</tbody>
-      <tfoot><tr><td>Total</td>${rtFootCells}<td style="color:#60A5FA;font-weight:600" id="rft-${pod.id}-total">${fmt(Math.round(pod.sdrs.reduce((t,s)=>t+sdrTotal(s),0)))}</td></tr></tfoot>
-    </table></div>
-  </div>
-
-  <div class="sec">Week-on-week tracker</div>
-  ${wkHTML}`;
+  return '<div class="podtitle" style="border-left-color:'+pod.color+'">'+pod.heading+
+    '<span class="podmeta">Projected: <span id="ptproj-'+pod.id+'" style="color:'+pod.color+'">'+fmt(proj)+'</span> &middot; '+
+    'Forecasted: <span id="ptfct-'+pod.id+'" style="color:#A78BFA">'+fmt(fc)+'</span> &middot; '+
+    'Actuals: <span id="ptact-'+pod.id+'" style="color:#86EFAC">'+fmt(act)+'</span> &middot; '+
+    'Target: '+fmt(tgt)+' &middot; Gap: <span id="ptgap-'+pod.id+'" style="color:'+gc(g)+'">'+(g>=0?'+':'')+fmt(g)+'</span></span></div>'+
+    sdrSummary+editRtSection+
+    '<div class="sec">Week-on-week tracker (Wk1 done &middot; Wk2/3/4: enter forecast + actuals)</div>'+wkHTML+
+    renderProg(pod);
 }
 
-// ─── EDIT / UPDATE HANDLERS ───────────────────────────────────────────────
-function editRT(podId,si,bkt,val){
-  const pod=PODS.find(p=>p.id===podId);
+// Edit handlers
+function editRT(pid,si,bkt,val){
+  var pod=PODS.filter(function(p){return p.id===pid;})[0];
   pod.sdrs[si].rt[bkt]=parseInt(val)||0;
-  const s=pod.sdrs[si];
-  const ae=document.getElementById(`rta-${podId}-${si}-${bkt}`);if(ae)ae.textContent=fmt(sdrARR(s,bkt));
-  const te=document.getElementById(`rtt-${podId}-${si}`);if(te)te.textContent=fmt(Math.round(sdrTotal(s)));
-  const rre=document.getElementById(`rft-${podId}-${bkt}`);if(rre)rre.textContent=podAllRT(pod,bkt);
-  const rae=document.getElementById(`rfta-${podId}-${bkt}`);if(rae)rae.textContent=fmt(podAllARR(pod,bkt));
-  const rte=document.getElementById(`rft-${podId}-total`);if(rte)rte.textContent=fmt(Math.round(pod.sdrs.reduce((t,s2)=>t+sdrTotal(s2),0)));
+  var s=pod.sdrs[si];
+  var ae=document.getElementById('rta-'+pid+'-'+si+'-'+bkt);if(ae)ae.textContent=fmt(sdrARR(s,bkt));
+  var te=document.getElementById('rtt-'+pid+'-'+si);if(te)te.textContent=fmt(Math.round(sdrProj(s)));
+  var rre=document.getElementById('rft-'+pid+'-'+bkt);if(rre)rre.textContent=podRT(pod,bkt);
+  var rae=document.getElementById('rfta-'+pid+'-'+bkt);if(rae)rae.textContent=fmt(podARR(pod,bkt));
+  var rte=document.getElementById('rft-'+pid+'-total');if(rte)rte.textContent=fmt(Math.round(pod.sdrs.reduce(function(t,s2){return t+sdrProj(s2);},0)));
   refreshSDRRow(pod,si);
   refreshPodFooter(pod);
-  WK_DEFS.forEach(wk=>{
-    const totFore=podSDRs(pod).reduce((t,s2)=>t+sdrWkF(wk.id,s2),0);
-    const hf=document.getElementById(`wh-fore-${podId}-${wk.id}`);if(hf)hf.textContent=fmtK(totFore);
-    const tf2=document.getElementById(`wt-fore-${podId}-${wk.id}`);if(tf2)tf2.textContent=fmt(totFore);
-    pod.sdrs.forEach(s2=>{const fe=document.getElementById(`wf-${podId}-${wk.id}-${s2.name}`);if(fe)fe.textContent=fmt(sdrWkF(wk.id,s2));});
+  WKS.forEach(function(wk){
+    var wp2=podSDRs(pod).reduce(function(t,s2){return t+sdrWkProj(wk.id,s2);},0);
+    var el=document.getElementById('wh-proj-'+pid+'-'+wk.id);if(el)el.textContent=fmtK(wp2);
   });
-  saveState();
-  refreshMaster();
+  save();refreshMaster();
 }
 
-function updateActual(podId,wkId,sdrName,isMgrStr,val){
-  actuals[podId][wkId][sdrName]=parseFloat(val.replace(/[$,]/g,""))||0;
-  const isMgr=isMgrStr==="true",pod=PODS.find(p=>p.id===podId);
-  if(!isMgr){
-    // refresh wk header
-    const totTgt=podSDRs(pod).reduce((t,s)=>t+s.tgt/4,0),totAct=wkPodAct(pod,wkId),arrGap=totTgt-totAct,p2=pct(totAct,totTgt);
-    const fc=p2>=100?"#22C55E":p2>=60?"#F59E0B":"#EF4444";
-    const ha=document.getElementById(`wh-act-${podId}-${wkId}`);if(ha)ha.textContent=fmtK(totAct);
-    const hg=document.getElementById(`wh-gap-${podId}-${wkId}`);if(hg){hg.textContent=arrGap>0?fmt(arrGap):"✓ Hit!";hg.style.color=arrGap>0?"#EF4444":"#22C55E";}
-    const hp=document.getElementById(`wh-pct-${podId}-${wkId}`);if(hp){hp.textContent=p2+"%";hp.style.color=fc;}
-    const ta2=document.getElementById(`wt-act-${podId}-${wkId}`);if(ta2)ta2.textContent=fmt(totAct);
-    const tg2=document.getElementById(`wt-gap-${podId}-${wkId}`);if(tg2){tg2.textContent=arrGap>0?fmt(arrGap):"✓ Hit!";tg2.style.color=arrGap>0?"#EF4444":"#22C55E";}
-    const tp2=document.getElementById(`wt-pct-${podId}-${wkId}`);if(tp2)tp2.innerHTML=`<span class="tag" style="background:${pctBg(p2)};color:${pctColor(p2)}">${p2}%</span>`;
-    // refresh wk row gap/pct
-    const sdr=pod.sdrs.find(s=>s.name===sdrName);
-    if(sdr){
-      const act=actuals[podId][wkId][sdrName],wt=sdr.tgt/4,sp2=pct(act,wt),sc=pctColor(sp2),sbg=pctBg(sp2);
-      const gapEl=document.getElementById(`wg-${podId}-${wkId}-${sdrName}`);if(gapEl)gapEl.textContent=fmt(Math.max(0,wt-act));
-      const spEl=document.getElementById(`wp-${podId}-${wkId}-${sdrName}`);if(spEl)spEl.innerHTML=`<span class="tag" style="background:${sbg};color:${sc}">${sp2}%</span>`;
-    }
-    // Refresh SDR summary row actuals + pct columns
-    const si=pod.sdrs.findIndex(s=>s.name===sdrName);
-    if(si>=0) refreshSDRRow(pod,si);
-    refreshPodFooter(pod);
-    // pod summary table
-    const ta3=podActs(pod),ag=podTgt(pod)-ta3;
-    const psact=document.getElementById(`ps-act-${podId}`);if(psact)psact.textContent=fmt(ta3);
-    const psagap=document.getElementById(`ps-agap-${podId}`);if(psagap){psagap.textContent=ag>0?fmt(ag):"✓ Hit!";psagap.style.color=ag>0?"#EF4444":"#22C55E";}
-    const paEl=document.getElementById(`ps-apct-${podId}`);if(paEl)paEl.innerHTML=tagH(pct(ta3,podTgt(pod)));
+function updFc(pid,wid,name,mgrStr,val){
+  forecasts[pid][wid][name]=parseFloat(val.replace(/[$,]/g,''))||0;
+  var isMgr=mgrStr==='true';
+  if(isMgr){save();return;}
+  var pod=PODS.filter(function(p){return p.id===pid;})[0];
+  var si=pod.sdrs.map(function(s){return s.name;}).indexOf(name);
+  var wFc=wkPodFcst(pod,wid);
+  var hf=document.getElementById('wh-fc-'+pid+'-'+wid);if(hf)hf.textContent=fmtK(wFc);
+  var tf=document.getElementById('wt-fc-'+pid+'-'+wid);if(tf)tf.textContent=fmt(wFc);
+  var sfc=document.getElementById('sfc-'+pid+'-'+wid+'-'+si);if(sfc)sfc.textContent=fmt(forecasts[pid][wid][name]);
+  var ff=document.getElementById('ftfc-'+pid+'-'+wid);if(ff)ff.textContent=fmt(wFc);
+  if(si>=0)refreshSDRRow(pod,si);
+  refreshPodFooter(pod);
+  save();refreshMaster();
+}
+
+function updAct(pid,wid,name,mgrStr,val){
+  actuals[pid][wid][name]=parseFloat(val.replace(/[$,]/g,''))||0;
+  var isMgr=mgrStr==='true';
+  if(isMgr){save();return;}
+  var pod=PODS.filter(function(p){return p.id===pid;})[0];
+  var wTgt=podSDRs(pod).reduce(function(t,s){return t+s.tgt/4;},0);
+  var wAct=wkPodAct(pod,wid),wGap=wTgt-wAct,wp=pct(wAct,wTgt);
+  var fcol=wp>=100?'#22C55E':wp>=60?'#F59E0B':'#EF4444';
+  var ha=document.getElementById('wh-act-'+pid+'-'+wid);if(ha)ha.textContent=fmtK(wAct);
+  var hg=document.getElementById('wh-gap-'+pid+'-'+wid);if(hg){hg.textContent=wGap>0?fmt(wGap):'Hit!';hg.style.color=wGap>0?'#EF4444':'#22C55E';}
+  var hp=document.getElementById('wh-pct-'+pid+'-'+wid);if(hp){hp.textContent=wp+'%';hp.style.color=fcol;}
+  var ta=document.getElementById('wt-act-'+pid+'-'+wid);if(ta)ta.textContent=fmt(wAct);
+  var tg=document.getElementById('wt-gap-'+pid+'-'+wid);if(tg){tg.textContent=wGap>0?fmt(wGap):'Hit!';tg.style.color=wGap>0?'#EF4444':'#22C55E';}
+  var tp=document.getElementById('wt-pct-'+pid+'-'+wid);if(tp)tp.innerHTML=tag(wp);
+  var s=pod.sdrs.filter(function(x){return x.name===name;})[0];
+  if(s){
+    var wt=s.tgt/4,a2=actuals[pid][wid][name],sp=pct(a2,wt);
+    var gEl=document.getElementById('wkg-'+pid+'-'+wid+'-'+name);if(gEl)gEl.textContent=fmt(Math.max(0,wt-a2));
+    var pEl=document.getElementById('wkp-'+pid+'-'+wid+'-'+name);if(pEl)pEl.innerHTML=tag(sp);
   }
-  saveState();
-  refreshMaster();
+  var si=pod.sdrs.map(function(s2){return s2.name;}).indexOf(name);
+  if(si>=0)refreshSDRRow(pod,si);
+  refreshPodFooter(pod);
+  var ta3=podActs(pod),ag=podTgt(pod)-ta3;
+  var psa=document.getElementById('ps-act-'+pid);if(psa)psa.textContent=fmt(ta3);
+  var psag=document.getElementById('ps-agap-'+pid);if(psag){psag.textContent=ag>0?fmt(ag):'Hit!';psag.style.color=ag>0?'#EF4444':'#22C55E';}
+  var pspa=document.getElementById('ps-pa-'+pid);if(pspa)pspa.innerHTML=tag(pct(ta3,podTgt(pod)));
+  save();refreshMaster();
 }
 
 function refreshSDRRow(pod,si){
-  const s=pod.sdrs[si],isMgr=s.isMgr;
-  const f=Math.round(sdrTotal(s)),gv=isMgr?null:f-s.tgt,pFore=isMgr?null:pct(f,s.tgt);
-  const sa=sdrActuals(pod,s),pAct=isMgr?null:pct(sa,s.tgt);
-  const rows2=document.querySelectorAll(`#sb-${pod.id} tr`);
-  if(rows2[si]){const cells=rows2[si].querySelectorAll("td");const bi={darkRed:2,red:3,amber:4,green:5};BKTS.forEach(b=>{if(cells[bi[b.id]])cells[bi[b.id]].textContent=fmt(sdrARR(s,b.id));});}
-  const sfe=document.getElementById(`sf-${pod.id}-${si}`);if(sfe)sfe.textContent=fmt(f);
-  const sae=document.getElementById(`sa-${pod.id}-${si}`);if(sae&&!isMgr)sae.textContent=fmt(sa);
-  const sge=document.getElementById(`sg-${pod.id}-${si}`);if(sge&&!isMgr){sge.textContent=(gv>=0?"+":"")+fmt(gv);sge.style.color=gc_(gv);}
-  const spe=document.getElementById(`sp-${pod.id}-${si}`);
-  if(spe&&!isMgr)spe.innerHTML=`<div class="pct-cell">${tagSm(pFore,"⬆ "+pFore+"%")}${tagSm(pAct,"✓ "+pAct+"%")}</div>`;
+  var s=pod.sdrs[si],m=s.mgr,pid=pod.id;
+  var f=Math.round(sdrProj(s)),g2=m?null:f-s.tgt,pp2=m?null:pct(f,s.tgt);
+  var sa=sdrActsAll(pid,s),pa=m?null:pct(sa,s.tgt);
+  var sf=sdrFcstAll(pid,s),pf=m?null:pct(sf,s.tgt);
+  var rows=document.querySelectorAll('#sb-'+pid+' tr');
+  if(rows[si]){
+    var cells=rows[si].querySelectorAll('td');
+    var bi={darkRed:2,red:3,amber:4,green:5};
+    BKTS.forEach(function(b){if(cells[bi[b.id]])cells[bi[b.id]].textContent=fmt(sdrARR(s,b.id));});
+  }
+  var spe=document.getElementById('sp-'+pid+'-'+si);if(spe)spe.textContent=fmt(f);
+  var sge=document.getElementById('spg-'+pid+'-'+si);if(sge&&!m){sge.textContent=(g2>=0?'+':'')+fmt(g2);sge.style.color=gc(g2);}
+  WKS.filter(function(w){return !w.done;}).forEach(function(w){
+    var sfc=document.getElementById('sfc-'+pid+'-'+w.id+'-'+si);
+    if(sfc&&!m)sfc.textContent=fmt(sdrFcstWk(pid,w.id,s));
+  });
+  var sfte=document.getElementById('sft-'+pid+'-'+si);if(sfte)sfte.textContent=m?'--':fmt(sf);
+  var sate=document.getElementById('sat-'+pid+'-'+si);if(sate)sate.textContent=m?'--':fmt(sa);
+  var spcts=document.getElementById('spcts-'+pid+'-'+si);
+  if(spcts&&!m)spcts.innerHTML='<div class="pcts">'+tagxs(pp2,'P:'+pp2+'%')+tagxs(pf,'F:'+pf+'%')+'</div>';
 }
 
 function refreshPodFooter(pod){
-  const tf2=Math.round(podFore(pod)),tt2=podTgt(pod),tg2=tf2-tt2,tp2=pct(tf2,tt2);
-  const ta2=podActs(pod),tpa=pct(ta2,tt2);
-  BKTS.forEach(b=>{const e=document.getElementById(`fa-${pod.id}-${b.id}`);if(e)e.textContent=fmt(podAllARR(pod,b.id));});
-  const fte=document.getElementById(`ft-${pod.id}`);if(fte)fte.textContent=fmt(tf2);
-  const ftae=document.getElementById(`fta-${pod.id}`);if(ftae)ftae.textContent=fmt(ta2);
-  const fge=document.getElementById(`fg-${pod.id}`);if(fge){fge.textContent=(tg2>=0?"+":"")+fmt(tg2);fge.style.color=gc_(tg2);}
-  const fpe=document.getElementById(`fp-${pod.id}`);if(fpe)fpe.innerHTML=`<div class="pct-cell">${tagSm(tp2,"⬆ "+tp2+"%")}${tagSm(tpa,"✓ "+tpa+"%")}</div>`;
-  const ptf=document.getElementById(`ptf-${pod.id}`);if(ptf)ptf.textContent=fmt(tf2);
-  const pta=document.getElementById(`pta-${pod.id}`);if(pta)pta.textContent=fmt(ta2);
-  const ptg=document.getElementById(`ptg-${pod.id}`);if(ptg){ptg.textContent=(tg2>=0?"+":"")+fmt(tg2);ptg.style.color=gc_(tg2);}
-  const ptp=document.getElementById(`ptp-${pod.id}`);if(ptp){ptp.textContent=tp2+"% forecast";ptp.style.color=pctColor(tp2);}
-  // pod summary table
-  const psf=document.getElementById(`ps-fore-${pod.id}`);if(psf)psf.textContent=fmt(tf2);
-  const psg=document.getElementById(`ps-gap-${pod.id}`);if(psg){psg.textContent=(tg2>=0?"+":"")+fmt(tg2);psg.style.color=gc_(tg2);}
-  const psp=document.getElementById(`ps-pct-${pod.id}`);if(psp)psp.innerHTML=tagH(tp2);
-  const psap=document.getElementById(`ps-apct-${pod.id}`);if(psap)psap.innerHTML=tagH(tpa);
+  var pid=pod.id,tp=Math.round(podProj(pod)),tt=podTgt(pod),pg=tp-tt,pp=pct(tp,tt);
+  var ta=podActs(pod),pa=pct(ta,tt),tf=podFcst(pod),pf=pct(tf,tt);
+  BKTS.forEach(function(b){
+    var e=document.getElementById('fa-'+pid+'-'+b.id);if(e)e.textContent=fmt(podARR(pod,b.id));
+  });
+  var ftp=document.getElementById('ft-proj-'+pid);if(ftp)ftp.textContent=fmt(tp);
+  var fpg=document.getElementById('ft-pg-'+pid);if(fpg){fpg.textContent=(pg>=0?'+':'')+fmt(pg);fpg.style.color=gc(pg);}
+  WKS.filter(function(w){return !w.done;}).forEach(function(w){
+    var ff=document.getElementById('ftfc-'+pid+'-'+w.id);if(ff)ff.textContent=fmt(wkPodFcst(pod,w.id));
+  });
+  var ftf=document.getElementById('ft-fct-'+pid);if(ftf)ftf.textContent=fmt(tf);
+  var fta=document.getElementById('ft-act-'+pid);if(fta)fta.textContent=fmt(ta);
+  var ftp2=document.getElementById('ft-pcts-'+pid);if(ftp2)ftp2.innerHTML='<div class="pcts">'+tagxs(pp,'P:'+pp+'%')+tagxs(pf,'F:'+pf+'%')+'</div>';
+  var ptproj=document.getElementById('ptproj-'+pid);if(ptproj)ptproj.textContent=fmt(tp);
+  var ptfct=document.getElementById('ptfct-'+pid);if(ptfct)ptfct.textContent=fmt(tf);
+  var ptact=document.getElementById('ptact-'+pid);if(ptact)ptact.textContent=fmt(ta);
+  var ptgap=document.getElementById('ptgap-'+pid);if(ptgap){ptgap.textContent=(pg>=0?'+':'')+fmt(pg);ptgap.style.color=gc(pg);}
+  var psf=document.getElementById('ps-proj-'+pid);if(psf)psf.textContent=fmt(tp);
+  var psg=document.getElementById('ps-pgap-'+pid);if(psg){psg.textContent=(pg>=0?'+':'')+fmt(pg);psg.style.color=gc(pg);}
+  var psft=document.getElementById('ps-fct-'+pid);if(psft)psft.textContent=fmt(tf);
+  var psfg=document.getElementById('ps-fgap-'+pid);if(psfg){psfg.textContent=((tf-tt)>=0?'+':'')+fmt(tf-tt);psfg.style.color=gc(tf-tt);}
+  var pspp=document.getElementById('ps-pp-'+pid);if(pspp)pspp.innerHTML=tag(pp);
+  var pspa=document.getElementById('ps-pa-'+pid);if(pspa)pspa.innerHTML=tag(pa);
+  var pspf=document.getElementById('ps-pf-'+pid);if(pspf)pspf.innerHTML=tag(pf);
 }
 
 function refreshMaster(){
-  const mf=masterFore(),mt=masterTgt(),mg=mf-mt,ma=masterActs(),mag=mt-ma,mp=pct(mf,mt),map=pct(ma,mt);
-  const upd=(id,v,clr)=>{const e=document.getElementById(id);if(e){e.textContent=v;if(clr)e.style.color=clr;}};
-  upd("mkv-fore",fmt(mf),mf>=mt?"#22C55E":"#F59E0B");upd("mkv-fore-s",pct(mf,mt)+"% of target");
-  upd("mkv-gap",(mg>=0?"+":"")+fmt(mg),gc_(mg));upd("mkv-gap-s",mg>=0?"Ahead":"Behind");
-  upd("mkv-act",fmt(ma),"#60A5FA");upd("mkv-act-s",pct(ma,mt)+"% of target collected");
-  upd("mkv-agap",fmt(mag),mag<=0?"#22C55E":"#EF4444");upd("mkv-agap-s",mag<=0?"All targets hit!":"Remaining");
-  const psfa=document.getElementById("ps-fore-all");if(psfa)psfa.textContent=fmt(mf);
-  const psga=document.getElementById("ps-gap-all");if(psga){psga.textContent=(mg>=0?"+":"")+fmt(mg);psga.style.color=gc_(mg);}
-  const psaa=document.getElementById("ps-act-all");if(psaa)psaa.textContent=fmt(ma);
-  const psaga=document.getElementById("ps-agap-all");if(psaga){psaga.textContent=mag>0?fmt(mag):"✓ Hit!";psaga.style.color=mag>0?"#EF4444":"#22C55E";}
-  const pspa=document.getElementById("ps-pct-all");if(pspa)pspa.innerHTML=tagH(mp);
-  const psapa=document.getElementById("ps-apct-all");if(psapa)psapa.innerHTML=tagH(map);
-  updateMasterCharts();
+  var mp=mastProj(),mt=mastTgt(),mg=mp-mt,ma=mastActs(),mag=mt-ma,mf=mastFcst(),mfg=mf-mt;
+  function upd(id,v,c){var e=document.getElementById(id);if(e){e.textContent=v;if(c)e.style.color=c;}}
+  upd('mk-prj',fmt(mp),mp>=mt?'#22C55E':'#F59E0B');upd('mk-prj-s',pct(mp,mt)+'% of target');
+  upd('mk-pgap',(mg>=0?'+':'')+fmt(mg),gc(mg));
+  upd('mk-act',fmt(ma),'#60A5FA');upd('mk-act-s',pct(ma,mt)+'% collected');
+  upd('mk-agap',fmt(mag),mag<=0?'#22C55E':'#EF4444');
+  upd('mk-fct',fmt(mf),'#A78BFA');upd('mk-fct-s',pct(mf,mt)+'% of target');
+  upd('mk-fgap',(mfg>=0?'+':'')+fmt(mfg),gc(mfg));
+  var psfa=document.getElementById('ps-proj-all');if(psfa)psfa.textContent=fmt(mp);
+  var psga=document.getElementById('ps-pgap-all');if(psga){psga.textContent=(mg>=0?'+':'')+fmt(mg);psga.style.color=gc(mg);}
+  var psaa=document.getElementById('ps-act-all');if(psaa)psaa.textContent=fmt(ma);
+  var psaga=document.getElementById('ps-agap-all');if(psaga){psaga.textContent=mag>0?fmt(mag):'Hit!';psaga.style.color=mag>0?'#EF4444':'#22C55E';}
+  var psfa2=document.getElementById('ps-fct-all');if(psfa2)psfa2.textContent=fmt(mf);
+  var psfga=document.getElementById('ps-fgap-all');if(psfga){psfga.textContent=(mfg>=0?'+':'')+fmt(mfg);psfga.style.color=gc(mfg);}
+  var pspp=document.getElementById('ps-pp-all');if(pspp)pspp.innerHTML=tag(pct(mp,mt));
+  var pspa=document.getElementById('ps-pa-all');if(pspa)pspa.innerHTML=tag(pct(ma,mt));
+  var pspf=document.getElementById('ps-pf-all');if(pspf)pspf.innerHTML=tag(pct(mf,mt));
+  updCharts();
 }
 
-function toggleWk(id){
-  document.getElementById("body-"+id).classList.toggle("op");
-  document.getElementById("chev-"+id).classList.toggle("op");
+function togWk(id){
+  var b=document.getElementById('body-'+id);if(b)b.classList.toggle('op');
+  var c=document.getElementById('chev-'+id);if(c)c.classList.toggle('op');
 }
 
-renderMasterKPI();
-renderPodSummaryTable();
-buildMasterCharts();
-renderPodSections();
+
+// ── Programmes per pod ───────────────────────────────────────────────────
+var PROGS = {
+  "p1": [
+    {num:"01", strategy:"Tax Refund Surge", desc:"Accelerating 18 GFDs & 48 SF (Total 102 rooftops) through Calls, Emails, LinkedIn, iMessages", weeks:"Wk 1-3", owner:"", status:"Initiated"},
+    {num:"02", strategy:"ICP Based Targets", desc:"Outreach to Clean Slate - 20 fresh accounts per SDR through Calls, Emails, LinkedIn, iMessages", weeks:"Wk 1-3", owner:"", status:"Initiated"},
+    {num:"04", strategy:"Hormuz Volatility", desc:"Cold outreach to 42 Cold GFDs using geopolitical triggers. On hold.", weeks:"Wk 1-3", owner:"", status:"Initiated"}
+  ],
+  "p5": [
+    {num:"01", strategy:"Previous No-shows & Q2 Reach Back", desc:"Working on Previous No-shows & Reach back at Q2 Leads", weeks:"W1-W2", status:"Initiated"},
+    {num:"02", strategy:"Lost Deals Recovery", desc:"Working on Lost Deals (Could be Drop off SDR/Sales)", weeks:"W1-W2", status:"Initiated"},
+    {num:"03", strategy:"Lost MQLs Outreach", desc:"Working on Lost MQLs if assigned by Marketing", weeks:"W1-W2", status:"Initiated"},
+    {num:"04", strategy:"Group Level Reachouts", desc:"Group level Reachouts (Bottom to top Approach) / Top SF (350+ Cars)", weeks:"W1-W2", status:"Initiated"},
+    {num:"05", strategy:"Segregation of Groups", desc:"Manager segregates groups into Tier A (High intent/funded/hiring), Tier B (Mid intent), Tier C (Long-term nurture) with required activity per tier.", weeks:"W1-W3: Tier A - Calls + Email + LinkedIn + Fast follow-ups | Tier C - LinkedIn + light email nurture", status:"Initiated"},
+    {num:"06", strategy:"Playbook per Motion", desc:"Playbook shared with team: No-shows - Same-day call + reschedule script | Lost deals - Why now lost? reframe messaging | Lost MQLs - Re-qualification angle", weeks:"W1-W4", status:"Initiated"},
+    {num:"07", strategy:"Weekly Coaching", desc:"W1: Openings | W2: Objection handling | W3: Discovery quality | W4: Closing for calendar", weeks:"W1-W4", status:"Initiated"}
+  ],
+  "p2": [
+    {num:"01", strategy:"Lowest hanging fruit first", desc:"Aggressively re-engage all open deals and accounts with any existing deal activity.", weeks:"Wk 1-2", owner:"BDR + AE", status:"In Progress", updated:"2 demos happened", notes:""},
+    {num:"02", strategy:"Compete intel priority", desc:"Battle cards shared + warmed via email & LinkedIn on all compete-tagged accounts.", weeks:"Wk 1-2", owner:"AE", status:"In Progress", updated:"", notes:""},
+    {num:"03", strategy:"Big GD + SF territory split", desc:"Manager: 20-30% SF, 70-80% big GDs. Team: 65% SF / 35% GD. Multi-level penetration.", weeks:"Wk 2-3", owner:"AE", status:"In Progress", updated:"2 GD happened", notes:"$272k Pipeline Achieved"},
+    {num:"04", strategy:"No-show + high-intent rescue", desc:"Personally works all historical no-shows and high-intent leads across the team.", weeks:"Wk 1-3", owner:"AE", status:"In Progress", updated:"2 demos scheduled for next week", notes:""},
+    {num:"05", strategy:"Tech/AI geek identification", desc:"Find >= 1 AI/ROI advocate per account to use as warm champion and internal amplifier.", weeks:"Wk 1-3", owner:"SDR + BDR", status:"Not Started", updated:"", notes:""},
+    {num:"06", strategy:"Top-down + bottom-up GD entry", desc:"Simultaneously pursue leadership and floor-level champions for early penetration.", weeks:"Wk 3", owner:"AE", status:"In Progress", updated:"", notes:""},
+    {num:"07", strategy:"Multi-channel persona outreach", desc:"LI voice notes, WA 30s videos, persona-researched 1-pager visuals. Zero generic emails.", weeks:"Wk 2-4", owner:"SDR + BDR", status:"In Progress", updated:"", notes:""},
+    {num:"08", strategy:"FOMO + geopolitical hook", desc:"US-Iran tensions supply chain pressure AI efficiency as cost hedge narrative.", weeks:"Wk 1-2", owner:"All", status:"In Progress", updated:"", notes:""},
+    {num:"09", strategy:"Daily coaching: 2nd half huddle", desc:"AE + 2 SDRs each afternoon: objection handling, account navigation, live call support.", weeks:"Wk 1-4", owner:"AE", status:"In Progress", updated:"", notes:""},
+    {num:"10", strategy:"2x daily call blitz (2 hrs each)", desc:"Full team AM + PM. KPI: min 1 demo booked per rep per day. No exceptions.", weeks:"Wk 1-4", owner:"All", status:"In Progress", updated:"8 Demos scheduled", notes:""}
+  ]
+};
+
+// ARR from each programme: progARR[podId][progNum] = number
+var progARR = {};
+Object.keys(PROGS).forEach(function(pid){
+  progARR[pid] = {};
+  PROGS[pid].forEach(function(p){ progARR[pid][p.num] = 0; });
+});
+// Programme status overrides
+var progStatus = {};
+Object.keys(PROGS).forEach(function(pid){
+  progStatus[pid] = {};
+  PROGS[pid].forEach(function(p){ progStatus[pid][p.num] = p.status; });
+});
+
+function totalProgARR(){
+  var t=0;
+  Object.keys(progARR).forEach(function(pid){
+    Object.keys(progARR[pid]).forEach(function(n){ t+=progARR[pid][n]||0; });
+  });
+  return t;
+}
+
+function podProgARR(pid){
+  var t=0;
+  if(progARR[pid]) Object.keys(progARR[pid]).forEach(function(n){ t+=progARR[pid][n]||0; });
+  return t;
+}
+
+function updProgARR(pid,num,val){
+  progARR[pid][num]=parseFloat(val.replace(/[$,]/g,''))||0;
+  var el=document.getElementById('prog-tot-'+pid);
+  if(el)el.textContent=fmt(podProgARR(pid));
+  var mk=document.getElementById('mk-prog');
+  if(mk)mk.textContent=fmt(totalProgARR());
+  saveProg();
+}
+
+function updProgStatus(pid,num,val){
+  progStatus[pid][num]=val;
+  var el=document.getElementById('prog-st-'+pid+'-'+num);
+  if(el){
+    var cfg=statusCfg(val);
+    el.style.background=cfg.bg;
+    el.style.color=cfg.color;
+    el.textContent=val;
+  }
+  saveProg();
+}
+
+function statusCfg(s){
+  if(s==='Completed') return {bg:'#14532D33',color:'#22C55E'};
+  if(s==='In Progress') return {bg:'#1E3A5F33',color:'#60A5FA'};
+  return {bg:'#78350F33',color:'#F59E0B'};
+}
+
+function saveProg(){
+  try{ localStorage.setItem('gtm_prog',JSON.stringify({arr:progARR,status:progStatus})); }catch(e){}
+}
+function loadProg(){
+  try{
+    var raw=localStorage.getItem('gtm_prog'); if(!raw)return;
+    var d=JSON.parse(raw);
+    if(d.arr) Object.keys(d.arr).forEach(function(pid){
+      if(!progARR[pid])return;
+      Object.keys(d.arr[pid]).forEach(function(n){ progARR[pid][n]=d.arr[pid][n]||0; });
+    });
+    if(d.status) Object.keys(d.status).forEach(function(pid){
+      if(!progStatus[pid])return;
+      Object.keys(d.status[pid]).forEach(function(n){ progStatus[pid][n]=d.status[pid][n]||progStatus[pid][n]; });
+    });
+  }catch(e){}
+}
+loadProg();
+
+function renderProg(pod){
+  var pid=pod.id;
+  if(!PROGS[pid]) return '';
+  var progs=PROGS[pid];
+  var rows=progs.map(function(p){
+    var st=progStatus[pid][p.num]||p.status;
+    var cfg=statusCfg(st);
+    var arr=progARR[pid][p.num]||0;
+    return '<tr>'+
+      '<td style="color:var(--mut);font-size:10px">'+p.num+'</td>'+
+      '<td style="font-weight:600;font-size:11px;max-width:140px">'+p.strategy+'</td>'+
+      '<td style="color:var(--mut);font-size:10px;max-width:200px">'+p.desc+'</td>'+
+      '<td style="color:var(--mut);font-size:10px;white-space:nowrap">'+p.weeks+'</td>'+
+      '<td><select data-pid="'+pid+'" data-num="'+p.num+'" onchange="updProgStatus(this.dataset.pid,this.dataset.num,this.value)" style="background:'+cfg.bg+';color:'+cfg.color+';border:1px solid '+cfg.color+'44;border-radius:12px;padding:2px 6px;font-size:10px;font-weight:600;cursor:pointer;outline:none">'+
+        ['In Progress','Not Started','Completed'].map(function(o){return '<option value="'+o+'"'+(st===o?' selected':'')+'>'+o+'</option>';}).join('')+
+      '</select></td>'+
+      
+      '<td><input class="ein" style="width:80px;border-color:#A78BFA44" value="'+(arr||'')+'" placeholder="$0" data-pid="'+pid+'" data-num="'+p.num+'" oninput="updProgARR(this.dataset.pid,this.dataset.num,this.value)"></td>'+
+      +
+      '</tr>';
+  }).join('');
+  var tot=podProgARR(pid);
+  return '<div class="sec">Strategic programmes &mdash; '+pod.heading+'</div>'+
+    '<div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--bdr)">'+
+    '<span style="font-size:12px;font-weight:600">Strategic Moves Tracker &mdash; April 2026</span>'+
+    '<span style="font-size:12px;color:#A78BFA">Total ARR from programmes: <span id="prog-tot-'+pid+'" style="font-weight:600;color:#22C55E">'+fmt(tot)+'</span></span>'+
+    '</div>'+
+    '<div class="tw"><table class="tbl" style="min-width:900px">'+
+    '<thead><tr>'+
+    '<th style="text-align:left">#</th>'+
+    '<th style="text-align:left">Strategy</th>'+
+    '<th style="text-align:left">Description</th>'+
+    '<th>Weeks</th>'+
+    '<th>Status</th>'+
+    '<th style="color:#A78BFA">ARR closed</th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '</table></div></div>';
+}
+
+renderMKPI();
+renderPodTbl();
+buildCharts();
+renderPods();
 </script>
 </body>
 </html>
